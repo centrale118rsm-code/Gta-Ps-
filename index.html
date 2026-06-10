@@ -1,403 +1,1234 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DJ PILU — Pierluigi Berardi</title>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-:root{--gold:#C9A84C;--gl:#E8C97A;--gg:rgba(201,168,76,.35);--dark:#060606;--d2:#0E0E0E;--d3:#141414;--light:#F0EDE8;--mu:rgba(240,237,232,.45);--g2:rgba(255,255,255,.04);--bd:rgba(255,255,255,.07);--sc:#FF5500;--r:14px}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>118 San Marino — Turno di Notte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
 
-/* SFONDO DINAMICO CSS */
-body{
-    font-family:'Inter',-apple-system,sans-serif;
-    color:var(--light);
-    overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
-    background-color: #030303;
-    background-image: 
-        radial-gradient(circle at 15% 50%, rgba(20, 20, 20, 0.8) 0%, transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(25, 25, 25, 0.7) 0%, transparent 50%),
-        radial-gradient(circle at 50% 80%, rgba(15, 15, 15, 0.9) 0%, transparent 60%);
-    background-attachment: fixed;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body::after{
-    content:'';
-    position:fixed;
-    inset:0;
-    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-    pointer-events:none;
-    z-index:9998;
-    opacity: 0.9; 
-}
+  :root {
+    --bg:       #060a0f;
+    --panel:    #0d1520;
+    --border:   #1a2e44;
+    --green:    #00e676;
+    --red:      #ff1744;
+    --amber:    #ffc400;
+    --blue:     #00b0ff;
+    --white:    #e8f4fd;
+    --dim:      #4a6278;
+    --font-ui:  'Share Tech Mono', monospace;
+    --font-hud: 'Orbitron', sans-serif;
+  }
 
-/* SPLASH, HUD, PLAYER */
-#splash{
-    position:fixed;inset:0;z-index:99999;
-    background-color: #030303;
-    background-image: 
-        radial-gradient(circle at 15% 50%, rgba(20, 20, 20, 0.8) 0%, transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(25, 25, 25, 0.7) 0%, transparent 50%),
-        radial-gradient(circle at 50% 80%, rgba(15, 15, 15, 0.9) 0%, transparent 60%);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.5s ease,visibility 1.5s ease;
-}
-#splash.hide{opacity:0;visibility:hidden;pointer-events:none}
-.sp-logo{font-family:'Bebas Neue',sans-serif;font-size:30vw;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(201,168,76,.6);letter-spacing:4vw;animation:lb 3s ease-in-out infinite;user-select:none}
-@keyframes lb{0%,100%{-webkit-text-stroke-color:rgba(201,168,76,.35)}50%{-webkit-text-stroke-color:rgba(201,168,76,1)}}
-.sp-line{width:40px;height:1px;background:var(--gold);margin:18px auto;animation:lg 1.8s ease-out forwards .6s;transform:scaleX(0);transform-origin:center}
-@keyframes lg{to{transform:scaleX(1)}}
-.sp-sub{font-family:'Space Grotesk',sans-serif;font-size:3.2vw;letter-spacing:6px;text-transform:uppercase;color:var(--mu);margin-bottom:50px}
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--font-ui);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
 
-#hud{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;pointer-events:none}
-.hl{display:flex;gap:7px;pointer-events:auto}
-.hr{display:flex;flex-direction:column;align-items:flex-end;gap:7px;pointer-events:auto}
-.hi{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;text-decoration:none;color:#fff;background:rgba(6,6,6,.72);border:1px solid var(--bd);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:0 2px 12px rgba(0,0,0,.5);transition:transform .15s}
-.hi:active{transform:scale(.84)}
-.hi .fa-whatsapp{color:#25D366}
-.hi .fa-instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hi .fa-soundcloud{color:var(--sc)}
-.hi .fa-spotify{color:#1DB954}
-.hi .fa-link{color:#43E660}
-.hp{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;background:rgba(6,6,6,.72);border:1px solid var(--bd);backdrop-filter:blur(20px);font-size:3vw;font-weight:600;color:var(--light);box-shadow:0 2px 12px rgba(0,0,0,.5);cursor:pointer;user-select:none;}
-.hp i{font-size:3.2vw;color:rgba(255,255,255,.35);}
-#like-btn.liked{border-color:rgba(255,80,80,.5);color:#ff5050}
-#like-btn.liked i{color:#ff5050}
+  /* ─── HEADER ─── */
+  #header {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  #header h1 {
+    font-family: var(--font-hud);
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--red);
+    text-shadow: 0 0 20px rgba(255,23,68,0.6);
+  }
+  #header h1 span { color: var(--amber); }
+  #score-display {
+    font-family: var(--font-hud);
+    font-size: 13px;
+    color: var(--amber);
+    text-shadow: 0 0 10px rgba(255,196,0,0.5);
+    letter-spacing: 2px;
+  }
 
-#player{position:fixed;bottom:22px;left:16px;z-index:1000;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:50px;background:rgba(6,6,6,.88);border:1px solid var(--bd);backdrop-filter:blur(24px);box-shadow:0 4px 24px rgba(0,0,0,.6)}
-#ppb{background:none;border:none;color:var(--gold);font-size:18px;cursor:pointer;outline:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
-.viz{display:flex;align-items:flex-end;gap:2.5px;height:16px}
-.vb{width:2.5px;background:var(--gold);border-radius:2px;height:2px}
-.viz.on .vb:nth-child(1){animation:vb 1.1s ease-in-out infinite}
-.viz.on .vb:nth-child(2){animation:vb .8s ease-in-out infinite .15s}
-.viz.on .vb:nth-child(3){animation:vb 1.4s ease-in-out infinite .05s}
-.viz.on .vb:nth-child(4){animation:vb 1.0s ease-in-out infinite .25s}
-.viz.on .vb:nth-child(5){animation:vb 1.3s ease-in-out infinite .1s}
-@keyframes vb{0%,100%{height:2px}50%{height:16px}}
+  /* ─── CANVAS WRAPPER ─── */
+  #canvas-wrap {
+    position: relative;
+    width: 960px;
+    height: 600px;
+    flex-shrink: 0;
+  }
+  #gameCanvas {
+    display: block;
+    width: 960px;
+    height: 600px;
+    image-rendering: pixelated;
+  }
+  /* CRT scanlines overlay */
+  #canvas-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
 
-#sc{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;mix-blend-mode:screen}
+  /* ─── HUD BAR ─── */
+  #hud {
+    width: 960px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--green);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #mission-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    animation: pulse-icon 1s ease-in-out infinite alternate;
+  }
+  @keyframes pulse-icon { from { opacity: 1; } to { opacity: 0.4; } }
+  #dialogue {
+    color: var(--green);
+    font-size: 13px;
+    line-height: 1.4;
+    flex: 1;
+    text-shadow: 0 0 8px rgba(0,230,118,0.4);
+  }
+  #controls-hint {
+    color: var(--dim);
+    font-size: 11px;
+    text-align: right;
+    line-height: 1.7;
+    white-space: nowrap;
+    border-left: 1px solid var(--border);
+    padding-left: 16px;
+  }
+  #controls-hint strong { color: var(--amber); }
 
-#hero{position:relative;width:100vw;height:100svh;display:flex;flex-direction:column;justify-content:flex-end;z-index:1;overflow:hidden}
-.hv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.55;transform:translateZ(0);will-change:transform}
-.ho{position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(6,6,6,1) 0%,rgba(6,6,6,.55) 40%,rgba(6,6,6,.2) 75%,rgba(0,0,0,.3) 100%),linear-gradient(to right,rgba(6,6,6,.7) 0%,rgba(6,6,6,.1) 65%)}
-.hi2{padding:0 22px 18vh;width:100%}
-.he{display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;font-family:'Space Grotesk',sans-serif;font-size:2.8vw;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gold)}
-.ld{width:7px;height:7px;border-radius:50%;background:#FF3B30;box-shadow:0 0 8px #FF3B30;animation:bl 1.2s ease-in-out infinite}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-.hn{font-family:'Bebas Neue',sans-serif;font-size:34vw;line-height:.85;letter-spacing:1.5vw;color:#fff;text-shadow:0 0 120px rgba(201,168,76,.12)}
-.htag{margin-top:14px;font-family:'Space Grotesk',sans-serif;font-size:3.2vw;font-weight:400;color:var(--mu);letter-spacing:2px;text-transform:uppercase}
-.htag span{color:var(--gl);margin:0 4px}
+  /* ─── TIMER BAR ─── */
+  #timer-row {
+    width: 960px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--dim);
+  }
+  #timer-bar-outer {
+    flex: 1;
+    height: 6px;
+    background: #1a2e44;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #timer-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--amber));
+    border-radius: 3px;
+    transition: width 0.1s linear, background 0.3s;
+    width: 100%;
+  }
+  #timer-label { color: var(--amber); font-family: var(--font-hud); font-size: 12px; letter-spacing: 1px; }
 
-/* SECTIONS */
-.section{position:relative;z-index:2;padding:70px 0 40px}
-.sec-hd{display:flex;align-items:baseline;gap:12px;padding:0 22px;margin-bottom:28px}
-.sec-n{font-family:'Space Grotesk',sans-serif;font-size:3vw;color:var(--gold);letter-spacing:2px;font-weight:700}
-.sec-t{font-family:'Bebas Neue',sans-serif;font-size:11vw;letter-spacing:2px;line-height:1;color:var(--light)}
+  /* ─── OVERLAY SCREENS ─── */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: rgba(6,10,15,0.92);
+  }
+  .overlay h2 {
+    font-family: var(--font-hud);
+    font-size: 28px;
+    letter-spacing: 6px;
+    margin-bottom: 24px;
+  }
+  .overlay.green h2 { color: var(--green); text-shadow: 0 0 30px rgba(0,230,118,0.7); }
+  .overlay.red   h2 { color: var(--red);   text-shadow: 0 0 30px rgba(255,23,68,0.7); }
+  .overlay.amber h2 { color: var(--amber); text-shadow: 0 0 30px rgba(255,196,0,0.7); }
 
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
-.reveal.on{opacity:1;transform:none}
+  .overlay p { color: var(--dim); font-size: 13px; margin-bottom: 6px; text-align: center; }
+  .overlay .big { color: var(--white); font-size: 20px; font-family: var(--font-hud); margin: 10px 0; }
 
-/* EVENTS */
-#ew{padding:0 22px}
-.ec{position:relative;border-radius:var(--r);overflow:hidden;margin-bottom:18px;box-shadow:0 20px 60px rgba(0,0,0,.7);border:1px solid var(--bd);background:rgba(14, 14, 14, 0.4); backdrop-filter: blur(10px);}
-.ec.concluded{opacity:.5}
-.ef{width:100%;display:block}
-.efoot{padding:14px 18px 16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,6,6,0) 0%,rgba(6,6,6,.95) 100%)}
-.cd{display:flex;gap:14px}
-.tb{display:flex;flex-direction:column;align-items:center}
-.tv{font-family:'Bebas Neue',sans-serif;font-size:9vw;color:var(--gl);line-height:1}
-.tl{font-size:2.3vw;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
-.conc{font-family:'Space Grotesk',sans-serif;font-size:3.5vw;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.1);padding:6px 18px;border-radius:40px}
-.ediv{display:flex;align-items:center;gap:14px;margin:28px 0 22px}
-.ediv::before,.ediv::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
-.ediv span{font-size:2.8vw;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.22)}
+  .btn {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-family: var(--font-hud);
+    font-size: 13px;
+    letter-spacing: 3px;
+    border: 2px solid var(--green);
+    color: var(--green);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn:hover { background: var(--green); color: var(--bg); }
+  .btn.red-btn { border-color: var(--red); color: var(--red); }
+  .btn.red-btn:hover { background: var(--red); color: var(--bg); }
+  .btn.amber-btn { border-color: var(--amber); color: var(--amber); }
+  .btn.amber-btn:hover { background: var(--amber); color: var(--bg); }
 
-/* GALLERY */
-.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
-.gi{position:relative;overflow:hidden;aspect-ratio:1/1;cursor:pointer;background:var(--d3)}
-.gi.wide{grid-column:span 2;aspect-ratio:2/1}
-.gi img,.gi video{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s cubic-bezier(.16,1,.3,1),filter .3s;filter:brightness(.82) saturate(.9)}
-.gi:active img,.gi:active video{transform:scale(1.06);filter:brightness(1)}
-.gi.isv::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.15);pointer-events:none}
-.pi{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;pointer-events:none;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.52);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center}
-.pi::after{content:'';width:0;height:0;border-style:solid;border-width:5.5px 0 5.5px 10px;border-color:transparent transparent transparent #fff;margin-left:2px}
+  /* Name input */
+  .name-input {
+    margin-top: 12px;
+    padding: 8px 16px;
+    font-family: var(--font-hud);
+    font-size: 16px;
+    background: var(--panel);
+    border: 2px solid var(--amber);
+    color: var(--amber);
+    letter-spacing: 3px;
+    text-align: center;
+    width: 260px;
+    text-transform: uppercase;
+    outline: none;
+  }
+  .name-input::placeholder { color: var(--dim); }
 
-/* LIGHTBOX */
-#lb{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.97);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .28s ease;flex-direction:column;padding:60px 10px 40px}
-#lb.show{display:flex;opacity:1}
-#lbi,#lbv{max-width:100%;max-height:80vh;border-radius:10px;display:none;box-shadow:0 0 60px rgba(0,0,0,.9)}
-#lbc{position:absolute;top:16px;right:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--bd);backdrop-filter:blur(12px);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  /* ─── LEADERBOARD ─── */
+  #leaderboard-table {
+    margin-top: 12px;
+    width: 360px;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  #leaderboard-table th {
+    color: var(--amber);
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  #leaderboard-table td {
+    padding: 4px 10px;
+    color: var(--white);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  #leaderboard-table tr:first-child td { color: var(--amber); font-size: 14px; }
+  .rank-1 td:first-child { color: var(--amber); }
+  .rank-2 td:first-child { color: #b0bec5; }
+  .rank-3 td:first-child { color: #bf9853; }
+  .me td { color: var(--green) !important; }
 
-/* RECENSIONI */
-.rev-wrap{padding: 0 22px;}
-.rev-form { background: rgba(14, 14, 14, 0.4); backdrop-filter: blur(10px); padding: 20px; border-radius: var(--r); border: 1px solid var(--bd); margin-bottom: 20px;}
-.rev-form input, .rev-form select, .rev-form textarea { width: 100%; background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-family: inherit; font-size: 15px;}
-.rev-form button { background: var(--gold); color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 8px; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: 'Space Grotesk', sans-serif;}
-.rev-card { background: rgba(255,255,255,0.02); padding: 16px; border-radius: var(--r); margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); }
-.rev-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;}
-.rev-name { font-weight: 600; color: var(--gold); font-size: 16px;}
-.rev-stars { color: #FFD700; font-size: 12px;}
-.rev-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.5; font-style: italic;}
-
-/* CONNECT */
-#lw{padding:0 22px;display:flex;flex-direction:column;gap:10px}
-.cb{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--r);text-decoration:none;color:var(--light);background:var(--g2);border:1px solid var(--bd);transition:border-color .25s,transform .15s}
-.cb:active{transform:scale(.97)}
-.cbi{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.cbt{flex:1}
-.cbl{font-family:'Space Grotesk',sans-serif;font-size:4vw;font-weight:700;line-height:1.2}
-.cbs{font-size:3vw;color:var(--mu);margin-top:2px}
-.wa .cbi{background:rgba(37,211,102,.1);color:#25D366}
-.ig .cbi{background:rgba(225,48,108,.1);color:#E1306C}
-.scc .cbi{background:rgba(255,85,0,.1);color:var(--sc)}
-.lt .cbi{background:rgba(67,230,96,.1);color:#43E660}
-
-footer{padding:60px 22px 120px;border-top:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;gap:12px}
-.fl{font-family:'Bebas Neue',sans-serif;font-size:20vw;letter-spacing:4vw;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.06);line-height:1}
-.fc{font-size:3vw;color:rgba(255,255,255,.2);text-align:center;line-height:1.9;letter-spacing:.5px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap;}
-.fd{color:var(--gold);margin:0 6px}
-.admin-btn{color:rgba(255,255,255,.1); font-size: 14px; margin-left: 8px; text-decoration: none;}
-    </style>
+  /* ─── PROXIMITY HINT ─── */
+  #proximity-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,230,118,0.15);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 20;
+    white-space: nowrap;
+  }
+  #proximity-hint.visible { opacity: 1; }
+</style>
 </head>
 <body>
 
-<div id="splash">
-    <div class="sp-logo">PILU</div>
-    <div class="sp-line"></div>
-    <div class="sp-sub">Pierluigi Berardi</div>
-    </div>
+<!-- HEADER -->
+<div id="header">
+  <h1>🚑 118 <span>SAN MARINO</span> — TURNO DI NOTTE</h1>
+  <div id="score-display">PUNTEGGIO: <span id="live-score">0</span></div>
+</div>
 
+<!-- TIMER -->
+<div id="timer-row">
+  <span id="timer-label">TEMPO: <span id="timer-val">00:00</span></span>
+  <div id="timer-bar-outer"><div id="timer-bar-inner"></div></div>
+  <span>STEP <span id="step-val">1</span>/4</span>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-wrap">
+  <canvas id="gameCanvas" width="960" height="600"></canvas>
+  <div id="proximity-hint">[ SPAZIO ] Sali a bordo</div>
+
+  <!-- OVERLAY: TITLE / NAME ENTRY -->
+  <div class="overlay amber" id="overlay-title">
+    <h2>🚑 PRONTO SOCCORSO 118</h2>
+    <p>TURNO DI NOTTE — SAN MARINO REPUBLIC</p>
+    <p style="margin-top:16px">Inserisci il tuo nome per la classifica:</p>
+    <input class="name-input" id="player-name-input" maxlength="12" placeholder="AAA" autofocus>
+    <button class="btn amber-btn" id="start-btn" style="margin-top:16px">INIZIA TURNO</button>
+    <div style="margin-top:24px; color:var(--dim); font-size:11px">
+      W/S: Avanti/Indietro &nbsp;|&nbsp; A/D: Sterza &nbsp;|&nbsp; SPAZIO: Interagisci
+    </div>
+  </div>
+
+  <!-- OVERLAY: VICTORY -->
+  <div class="overlay green" id="overlay-victory" style="display:none">
+    <h2>✅ EMERGENZA RISOLTA!</h2>
+    <p>Il paziente è in buone mani.</p>
+    <p class="big" id="victory-score-text">PUNTEGGIO: —</p>
+    <div id="lb-section">
+      <p style="color:var(--amber);margin-top:16px">CLASSIFICA GLOBALE</p>
+      <table id="leaderboard-table"><tbody id="lb-body"></tbody></table>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn" id="play-again-btn">GIOCA ANCORA</button>
+    </div>
+  </div>
+
+  <!-- OVERLAY: GAMEOVER (timeout) -->
+  <div class="overlay red" id="overlay-gameover" style="display:none">
+    <h2>⏱ TEMPO SCADUTO!</h2>
+    <p>L'ambulanza non è arrivata in tempo.</p>
+    <button class="btn red-btn" id="retry-btn">RIPROVA</button>
+  </div>
+</div>
+
+<!-- HUD -->
 <div id="hud">
-    <div class="hl">
-        <a href="https://wa.me/393337597075" class="hi"><i class="fab fa-whatsapp"></i></a>
-        <a href="https://www.instagram.com/pierluigi_berardi/" class="hi"><i class="fab fa-instagram"></i></a>
-        <a href="https://soundcloud.com/pierluigi-berardi" class="hi"><i class="fab fa-soundcloud"></i></a>
-        <a href="https://linktr.ee/PierluigiBerardi" class="hi"><i class="fas fa-link"></i></a>
-    </div>
-    <div class="hr">
-        <div class="hp"><i class="fas fa-eye"></i><span id="view-counter">—</span></div>
-        <div class="hp" id="like-btn"><i class="fas fa-heart"></i><span id="like-text">Mi Piace</span></div>
-    </div>
+  <div id="mission-icon">📡</div>
+  <div id="dialogue">Inserisci il nome e premi INIZIA TURNO.</div>
+  <div id="controls-hint">
+    <strong>W/S</strong> Avanti/Indietro &nbsp; <strong>A/D</strong> Sterza<br>
+    <strong>SPAZIO</strong> Interagisci/Sali
+  </div>
 </div>
 
-<audio id="bg-audio" loop preload="auto"><source src="audio.mp3" type="audio/mpeg"></audio>
-
-<div id="player">
-    <button id="ppb"><i class="fas fa-pause"></i></button>
-    <div class="viz" id="viz">
-        <div class="vb"></div><div class="vb"></div><div class="vb"></div><div class="vb"></div><div class="vb"></div>
-    </div>
-</div>
-
-<canvas id="sc"></canvas>
-
-<div id="lb">
-    <button id="lbc"><i class="fas fa-times"></i></button>
-    <img id="lbi" src="">
-    <video id="lbv" controls playsinline></video>
-</div>
-
-<header id="hero">
-    <video class="hv" id="hv" muted loop playsinline autoplay><source src="video1.mp4" type="video/mp4"></video>
-    <div class="ho"></div>
-    <div class="hi2">
-        <div class="he"><span class="ld"></span> On Tour</div>
-        <h1 class="hn">PILU</h1>
-        <p class="htag">Pierluigi Berardi <span>·</span> Afro House <span>·</span> San Marino 🇸🇲</p>
-    </div>
-</header>
-
-<section class="section" id="shows">
-    <div class="sec-hd reveal"><span class="sec-n">01</span><h2 class="sec-t">Shows</h2></div>
-    <div id="ew" class="reveal"></div>
-</section>
-
-<section class="section" id="gallery">
-    <div class="sec-hd reveal"><span class="sec-n">02</span><h2 class="sec-t">Vibes</h2></div>
-    <div class="gg reveal" id="gallery-grid"></div>
-</section>
-
-<section class="section" id="recensioni">
-    <div class="sec-hd reveal"><span class="sec-n">03</span><h2 class="sec-t">Feedback</h2></div>
-    <div class="rev-wrap reveal">
-        <div class="rev-form">
-            <input type="text" id="rev-name" placeholder="Il tuo nome (es. Marco)" maxlength="20">
-            <select id="rev-stars">
-                <option value="5">⭐⭐⭐⭐⭐ (Bomba!)</option>
-                <option value="4">⭐⭐⭐⭐ (Ottimo)</option>
-                <option value="3">⭐⭐⭐ (Buono)</option>
-            </select>
-            <textarea id="rev-text" placeholder="Com'è stata la serata?" rows="3"></textarea>
-            <button id="btn-invia-rev">Lascia una recensione</button>
-        </div>
-        <div id="rev-list"></div>
-    </div>
-</section>
-
-<section class="section" id="links">
-    <div class="sec-hd reveal"><span class="sec-n">04</span><h2 class="sec-t">Connect</h2></div>
-    <div id="lw" class="reveal">
-        <a href="https://wa.me/393337597075" class="cb wa"><div class="cbi"><i class="fab fa-whatsapp"></i></div><div class="cbt"><div class="cbl">WhatsApp</div><div class="cbs">Booking & Info</div></div></a>
-        <a href="https://www.instagram.com/pierluigi_berardi/" class="cb ig"><div class="cbi"><i class="fab fa-instagram"></i></div><div class="cbt"><div class="cbl">Instagram</div><div class="cbs">@pierluigi_berardi</div></div></a>
-        <a href="https://soundcloud.com/pierluigi-berardi" class="cb scc"><div class="cbi"><i class="fab fa-soundcloud"></i></div><div class="cbt"><div class="cbl">SoundCloud</div><div class="cbs">Ascolta i miei DJ Set</div></div></a>
-        <a href="https://linktr.ee/PierluigiBerardi" class="cb lt"><div class="cbi"><i class="fas fa-link"></i></div><div class="cbt"><div class="cbl">Linktree</div><div class="cbs">Tutti i miei link ufficiali</div></div></a>
-    </div>
-</section>
-
-<footer>
-    <div class="fl">PILU</div>
-    <p class="fc">© 2026 Pierluigi Berardi <span class="fd">◈</span> DJ Pilu <a href="admin.html" class="admin-btn"><i class="fas fa-lock"></i></a></p>
-</footer>
-
+<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ─────────────────────────────────────────────
+//   FIREBASE CONFIG — sostituisci con i tuoi
+// ─────────────────────────────────────────────
 const firebaseConfig = {
-    apiKey: "AIzaSyDPAwh58NCFJ3CoTLvG8KcVXC5oQPIzXiI",
-    authDomain: "sito-pilu.firebaseapp.com",
-    projectId: "sito-pilu",
-    storageBucket: "sito-pilu.firebasestorage.app",
-    messagingSenderId: "423213362317",
-    appId: "1:423213362317:web:809d1124411a6f3023c6c4"
+  apiKey:            "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  authDomain:        "tuo-progetto.firebaseapp.com",
+  projectId:         "tuo-progetto",
+  storageBucket:     "tuo-progetto.appspot.com",
+  messagingSenderId: "000000000000",
+  appId:             "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let db = null;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+} catch(e) { console.warn("Firebase non configurato — leaderboard offline"); }
 
-async function caricaContenuti() {
-    try {
-        const snapEv = await getDocs(query(collection(db, "eventi"), orderBy("date", "asc")));
-        buildEvents(snapEv.docs.map(doc => doc.data()));
-
-        const snapGal = await getDocs(query(collection(db, "gallery"), orderBy("ordine", "asc")));
-        buildGallery(snapGal.docs.map(doc => doc.data()));
-
-        caricaRecensioni();
-    } catch (e) { console.error(e); }
+async function saveScore(name, score, timeMs) {
+  if (!db) return;
+  try {
+    await addDoc(collection(db, "scores_118"), {
+      name: name.toUpperCase().trim(),
+      score,
+      timeMs,
+      ts: serverTimestamp()
+    });
+  } catch(e) { console.warn("Errore salvataggio:", e); }
 }
 
-async function caricaRecensioni() {
-    const list = document.getElementById('rev-list');
-    list.innerHTML = "";
-    const snapRev = await getDocs(query(collection(db, "recensioni"), orderBy("timestamp", "desc")));
-    
-    snapRev.forEach(doc => {
-        const data = doc.data();
-        const stars = "⭐".repeat(data.stelle);
-        const div = document.createElement('div');
-        div.className = 'rev-card';
-        div.innerHTML = `<div class="rev-head"><span class="rev-name">${data.nome}</span><span class="rev-stars">${stars}</span></div><div class="rev-text">"${data.testo}"</div>`;
-        list.appendChild(div);
-    });
+async function getTopScores() {
+  if (!db) return [];
+  try {
+    const q = query(collection(db, "scores_118"), orderBy("score","desc"), limit(10));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  } catch(e) { return []; }
 }
 
-document.getElementById('btn-invia-rev').addEventListener('click', async () => {
-    const nome = document.getElementById('rev-name').value.trim();
-    const testo = document.getElementById('rev-text').value.trim();
-    const stelle = parseInt(document.getElementById('rev-stars').value);
-    
-    if(!nome || !testo) return alert("Inserisci nome e recensione!");
-    
-    document.getElementById('btn-invia-rev').innerText = "Invio in corso...";
-    
-    await addDoc(collection(db, "recensioni"), {
-        nome: nome, testo: testo, stelle: stelle, timestamp: serverTimestamp()
-    });
-    
-    document.getElementById('rev-name').value = "";
-    document.getElementById('rev-text').value = "";
-    document.getElementById('btn-invia-rev').innerText = "Lascia una recensione";
-    caricaRecensioni();
+// ═══════════════════════════════════════════════
+//   GAME ENGINE
+// ═══════════════════════════════════════════════
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const dialogueEl     = document.getElementById('dialogue');
+const liveScoreEl    = document.getElementById('live-score');
+const timerValEl     = document.getElementById('timer-val');
+const timerBarEl     = document.getElementById('timer-bar-inner');
+const stepValEl      = document.getElementById('step-val');
+const proxHint       = document.getElementById('proximity-hint');
+const missionIconEl  = document.getElementById('mission-icon');
+const overlayTitle   = document.getElementById('overlay-title');
+const overlayVictory = document.getElementById('overlay-victory');
+const overlayGameover= document.getElementById('overlay-gameover');
+const lbBody         = document.getElementById('lb-body');
+const victoryScoreEl = document.getElementById('victory-score-text');
+
+// ─── NOMI ───
+const LISTA_AUTISTI    = ["Barbieri Matteo","Berardi Pierluigi","Bianchi Stefano","Fabbri Nicola","Ghiotti Gabriele","Michelotti Yan","Pazzaglia Stefano","Sarti Michele","Volpini Filippo"];
+const LISTA_INFERMIERI = ["Angelini Stefano","Bedetti Matteo","Canti Anna Helena","Capicchioni Laura","Castellani Giorgia","Casadei Marco","Chiaruzzi Eleonora","Gatti Gian Marco","Giancecchi Dario","Gozi Francesco","Lepri Andrea","Macherozzi Lucia","Mini Stefania","Morganti Flavio","Mosca Maria Pia","Mosconi Matteo","Pacelli Ludovica","Palumbo Stefano","Podeschi Federico","Sharov Savva","Tiburzi Sara","Ticchi Federica","Tini Clelia"];
+
+function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
+
+// ─── STATO GLOBALE ───
+let playerName = "AAA";
+let gameRunning = false;
+let gameOver    = false;
+let won         = false;
+let frame       = 0;
+let score       = 0;
+let startTime   = 0;
+let MISSION_TIME_MS = 120000; // 2 minuti
+
+// ─── CONTROLLI ───
+const keys = {};
+let prevSpace = false;
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Space') e.preventDefault();
 });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
 
-function buildEvents(data) {
-    const w = document.getElementById('ew'); w.innerHTML = ""; const now = Date.now();
-    const up = data.filter(e => new Date(e.date) > now), dn = data.filter(e => new Date(e.date) <= now);
-    function card(ev, c) { const el = document.createElement('div'); el.className = 'ec' + (c ? ' concluded' : ''); el.innerHTML = `<img src="${ev.img}" class="ef"><div class="efoot"><div class="cd" data-date="${ev.date}"></div></div>`; return el; }
-    up.forEach(e => w.appendChild(card(e, false)));
-    if(dn.length) { const d = document.createElement('div'); d.className = 'ediv'; d.innerHTML = '<span>eventi conclusi</span>'; w.appendChild(d); dn.forEach(e => w.appendChild(card(e, true))); }
-    tick();
+// ─── ISOMETRIA ───
+// mappa tile → screen
+function iso(tx, ty) {
+  return {
+    sx: (tx - ty) * 32 + W/2,
+    sy: (tx + ty) * 16 + 60
+  };
 }
 
-function buildGallery(items) {
-    const grid = document.getElementById('gallery-grid'); grid.innerHTML = ""; 
-    items.forEach(item => {
-        const wrap = document.createElement('div'); const isV = item.type === 'video'; wrap.className = 'gi' + (isV ? ' isv wide' : '');
-        if(isV) {
-            wrap.innerHTML = `<video muted loop playsinline><source src="${item.src}" type="video/mp4"></video><div class="pi"></div>`;
-            wrap.addEventListener('click', () => openVid(item.src));
+// ─── MAPPA LAYOUT (coordinate MONDO) ───
+// Layout mondo: 0,0 in alto a sx
+// Pixel world: 1 unit = 32px
+// Struttura: parcheggio a sinistra, edificio a destra
+
+// Dimensioni mappa in unità mondo
+const MAP = {
+  // Parcheggio: x: 0..8, y: 0..14
+  // Edificio:   x: 9..18, y: 0..14
+  parkMinX: 0, parkMaxX: 8,
+  bldMinX: 9,  bldMaxX: 18,
+  mapMinY: 0,  mapMaxY: 14
+};
+
+// ─── CONVERSIONE MONDO ↔ SCREEN (top-down isometrico) ───
+// World: x aumenta verso destra, y aumenta verso il basso
+function worldToScreen(wx, wy) {
+  // Asse isometrica: x→ destra, y→ profondità
+  const tileW = 64, tileH = 32;
+  const originX = W * 0.28, originY = 80;
+  return {
+    sx: originX + (wx - wy) * (tileW/2),
+    sy: originY + (wx + wy) * (tileH/2)
+  };
+}
+
+// ─── RENDERING TILES ───
+function drawTile(wx, wy, topColor, sideRColor, sideFColor, h=0) {
+  const TW = 64, TH = 32;
+  const {sx, sy} = worldToScreen(wx, wy);
+  const ex = sx + TW/2, ey = sy - h*TH;
+  const lx = sx - TW/2, ly = sy;
+  const rx = sx,       ry = sy - TH/2;
+
+  // Faccia superiore
+  ctx.beginPath();
+  ctx.moveTo(sx, ey - TH/2);
+  ctx.lineTo(ex, ey);
+  ctx.lineTo(sx, ey + TH/2);
+  ctx.lineTo(sx - TW/2, ey);
+  ctx.closePath();
+  ctx.fillStyle = topColor;
+  ctx.fill();
+
+  if (h > 0) {
+    // Faccia destra
+    ctx.beginPath();
+    ctx.moveTo(sx, ey + TH/2);
+    ctx.lineTo(ex, ey);
+    ctx.lineTo(ex, sy);
+    ctx.lineTo(sx, sy + TH/2);
+    ctx.closePath();
+    ctx.fillStyle = sideRColor;
+    ctx.fill();
+    // Faccia sinistra
+    ctx.beginPath();
+    ctx.moveTo(sx, ey + TH/2);
+    ctx.lineTo(sx - TW/2, ey);
+    ctx.lineTo(sx - TW/2, sy);
+    ctx.lineTo(sx, sy + TH/2);
+    ctx.closePath();
+    ctx.fillStyle = sideFColor;
+    ctx.fill();
+  }
+}
+
+// ─── COSTANTI DI POSIZIONE MONDO ───
+// Parcheggio (y da 0 a 14, x da 0 a 7)
+// Edificio   (y da 0 a 14, x da 8 a 17)
+
+// Building geometry in world coords
+const BUILDING_X0 = 8.5; // parete est del parcheggio = inizio edificio
+const BUILDING_X1 = 17.5;
+const BUILDING_Y0 = 0.5;
+const BUILDING_Y1 = 13.5;
+
+// Stanze (world x,y range)
+const ROOMS = {
+  centrale: { x0: 8.5, x1: 17.5, y0: 0.5, y1: 4.5,  label:"CENTRALE OPERATIVA", icon:"📡" },
+  amb1:     { x0: 8.5, x1: 17.5, y0: 5,   y1: 9,    label:"AMBULATORIO 1",       icon:"🏥" },
+  amb2:     { x0: 8.5, x1: 17.5, y0: 9.5, y1: 13.5, label:"AMBULATORIO 2",       icon:"🏥" }
+};
+
+// Parking bays
+const PARK_BAYS = [
+  { x: 3, y: 3 },
+  { x: 3, y: 6 },
+  { x: 3, y: 9 }
+];
+
+// ─── PERSONAGGI ───
+let npcs = [];
+let ambulances = [];
+let player = {};
+let target = {};
+
+const BROKEN_MESSAGES = [
+  "La Falco 29 ha il defibrillatore scarico! Prendi un'altra!",
+  "La Falco 30 ha una ruota a terra! Prendi un'altra!"
+];
+
+function initGame() {
+  frame = 0; score = 0; gameOver = false; won = false; gameRunning = true;
+  startTime = Date.now();
+
+  const autisti    = shuffle(LISTA_AUTISTI).slice(0,2);
+  const infermieri = shuffle(LISTA_INFERMIERI).slice(0,4);
+
+  // NPCs
+  npcs = [
+    // Centrale: 2 autisti
+    { name: autisti[0],    role:'Autista',    wx: 11, wy: 2,  color:'#1565c0', kind:'autista' },
+    { name: autisti[1],    role:'Autista',    wx: 14, wy: 3,  color:'#1565c0', kind:'autista' },
+    // Ambulatorio 1: 2 infermieri
+    { name: infermieri[0], role:'Infermiere', wx: 11, wy: 6,  color:'#2e7d32', kind:'infermiere', roomKey:'amb1' },
+    { name: infermieri[1], role:'Infermiere', wx: 14, wy: 7,  color:'#2e7d32', kind:'infermiere', roomKey:'amb1' },
+    // Ambulatorio 2: 2 infermieri
+    { name: infermieri[2], role:'Infermiere', wx: 11, wy: 10, color:'#2e7d32', kind:'infermiere', roomKey:'amb2' },
+    { name: infermieri[3], role:'Infermiere', wx: 14, wy: 11, color:'#2e7d32', kind:'infermiere', roomKey:'amb2' }
+  ];
+
+  // Ambulanze
+  ambulances = [
+    { id:'Falco 29', wx: PARK_BAYS[0].x, wy: PARK_BAYS[0].y, angle:0, speed:0, broken: BROKEN_MESSAGES[0] },
+    { id:'Falco 30', wx: PARK_BAYS[1].x, wy: PARK_BAYS[1].y, angle:0, speed:0, broken: BROKEN_MESSAGES[1] },
+    { id:'Falco 31', wx: PARK_BAYS[2].x, wy: PARK_BAYS[2].y, angle:0, speed:0, broken: false }
+  ];
+
+  // Player — parte nell'area parcheggio
+  player = {
+    wx: 5, wy: 11,
+    angle: 0, speed: 0,
+    maxSpeedFoot: 0.08,
+    r: 0.3,
+    inVehicle: false,
+    vehicle: null
+  };
+
+  // Target emergenza (angolo parcheggio lontano)
+  target = { wx: 1, wy: 1.5, active: false };
+
+  missionStep = 0;
+  updateMissionUI();
+}
+
+let missionStep = 0;
+
+const MISSION_STEPS = [
+  { icon:'📡', text: 'MISSIONE 1/4 — Vai in Centrale Operativa (edificio in alto).' },
+  { icon:'🏥', text: 'MISSIONE 2/4 — Vai in Ambulatorio 1 a raccogliere l\'infermiere.' },
+  { icon:'🚑', text: 'MISSIONE 3/4 — Torna al parcheggio e sali sulla Falco 31 [SPAZIO].' },
+  { icon:'🆘', text: 'MISSIONE 4/4 — Raggiungi il punto emergenza! (cerchio rosso in parcheggio)' }
+];
+
+function updateMissionUI() {
+  const s = MISSION_STEPS[missionStep] || MISSION_STEPS[0];
+  missionIconEl.textContent = s.icon;
+  stepValEl.textContent = missionStep + 1;
+}
+
+function msg(text) { dialogueEl.textContent = '>>> ' + text; }
+
+// ─── FISICA PLAYER A PIEDI ───
+function moveFoot() {
+  let ax = 0, ay = 0;
+  const sp = 0.09;
+  if (keys['KeyW'] || keys['ArrowUp'])    ay -= sp;
+  if (keys['KeyS'] || keys['ArrowDown'])  ay += sp;
+  if (keys['KeyA'] || keys['ArrowLeft'])  ax -= sp;
+  if (keys['KeyD'] || keys['ArrowRight']) ax += sp;
+
+  // Normalizza diagonali
+  if (ax !== 0 && ay !== 0) { ax *= 0.707; ay *= 0.707; }
+
+  let nwx = player.wx + ax;
+  let nwy = player.wy + ay;
+
+  // Confini mappa
+  nwx = Math.max(0.3, Math.min(17.2, nwx));
+  nwy = Math.max(0.3, Math.min(13.2, nwy));
+
+  // Parete edificio/parcheggio
+  const WALL_X = 7.8;
+  // Porte nelle pareti (centri stanze)
+  const DOOR_YS = [2.5, 7, 11]; // y-centro delle 3 stanze
+  const DOOR_W  = 1.2;
+
+  let blocked = false;
+  if ((player.wx < WALL_X && nwx > WALL_X) || (player.wx > WALL_X && nwx < WALL_X)) {
+    // Attraverso la parete — controlla se è vicino a una porta
+    const nearDoor = DOOR_YS.some(dy => Math.abs(nwy - dy) < DOOR_W);
+    if (!nearDoor) blocked = true;
+  }
+
+  if (!blocked) { player.wx = nwx; player.wy = nwy; }
+}
+
+// ─── FISICA AMBULANZA ───
+function moveVehicle() {
+  const v = player.vehicle;
+  const ACC   = 0.006;
+  const BRAKE = 0.004;
+  const FRIC  = 0.96;
+  const STEER = 0.045;
+  const MAX_S = 0.18;
+
+  if (keys['KeyW'] || keys['ArrowUp'])   v.speed = Math.min(v.speed + ACC, MAX_S);
+  if (keys['KeyS'] || keys['ArrowDown']) v.speed = Math.max(v.speed - BRAKE, -MAX_S * 0.5);
+  if (Math.abs(v.speed) > 0.001 && !keys['KeyW'] && !keys['KeyS'] && !keys['ArrowUp'] && !keys['ArrowDown']) {
+    v.speed *= FRIC;
+  }
+  if (Math.abs(v.speed) < 0.0005) v.speed = 0;
+
+  if (Math.abs(v.speed) > 0.005) {
+    const dir = v.speed > 0 ? 1 : -1;
+    if (keys['KeyA'] || keys['ArrowLeft'])  v.angle -= STEER * dir;
+    if (keys['KeyD'] || keys['ArrowRight']) v.angle += STEER * dir;
+  }
+
+  // Movimento in coordinate isometriche
+  // angle 0 = verso +x (est)
+  let nwx = v.wx + Math.cos(v.angle) * v.speed;
+  let nwy = v.wy + Math.sin(v.angle) * v.speed;
+
+  // Confini parcheggio
+  nwx = Math.max(0.5, Math.min(7.2, nwx));
+  nwy = Math.max(0.5, Math.min(13.0, nwy));
+
+  v.wx = nwx; v.wy = nwy;
+  player.wx = nwx; player.wy = nwy;
+}
+
+// ─── DISTANZA MONDO ───
+function wdist(a, b) { return Math.sqrt((a.wx-b.wx)**2 + (a.wy-b.wy)**2); }
+
+// ─── UPDATE ───
+function update() {
+  if (!gameRunning || gameOver || won) return;
+  frame++;
+
+  const elapsed = Date.now() - startTime;
+  const remaining = Math.max(0, MISSION_TIME_MS - elapsed);
+  const ratio = remaining / MISSION_TIME_MS;
+
+  // Timer UI
+  const sec = Math.floor(remaining / 1000);
+  const mm = String(Math.floor(sec/60)).padStart(2,'0');
+  const ss = String(sec % 60).padStart(2,'0');
+  timerValEl.textContent = `${mm}:${ss}`;
+  timerBarEl.style.width = (ratio * 100) + '%';
+  timerBarEl.style.background = ratio > 0.4
+    ? 'linear-gradient(90deg,#00e676,#ffc400)'
+    : 'linear-gradient(90deg,#ff1744,#ff6d00)';
+
+  if (remaining <= 0 && missionStep < 3) { triggerGameOver(); return; }
+
+  // Score passivo (sopravvivenza)
+  if (frame % 60 === 0 && missionStep > 0) score += 10;
+  liveScoreEl.textContent = score;
+
+  const spaceNow = keys['Space'];
+  const spaceTap = spaceNow && !prevSpace;
+  prevSpace = spaceNow;
+
+  // ─── MOVIMENTO ───
+  if (player.inVehicle) {
+    moveVehicle();
+  } else {
+    moveFoot();
+  }
+
+  // ─── LOGICA MISSIONI ───
+  const inBuilding = player.wx > 8;
+  const wy = player.wy;
+
+  // Proximity hint
+  let showHint = false;
+  if (!player.inVehicle && missionStep === 2) {
+    for (const amb of ambulances) {
+      if (wdist(player, amb) < 1.5) { showHint = true; break; }
+    }
+  }
+  proxHint.classList.toggle('visible', showHint);
+
+  // Step 0 → 1: entra in Centrale
+  if (missionStep === 0 && inBuilding && wy < 4.5) {
+    const n0 = npcs[0], n1 = npcs[1];
+    msg(`${n0.name}: "Emergenza Codice Rosso! Accompagna l'infermiere ${npcs[2].name} in Ambulatorio 1!"`);
+    missionStep = 1;
+    score += 200;
+    updateMissionUI();
+  }
+
+  // Step 1 → 2: entra in Ambulatorio 1
+  if (missionStep === 1 && inBuilding && wy >= 4.5 && wy < 9) {
+    msg(`${npcs[2].name}: "Pronto! Vai al parcheggio, prendi la Falco 31 — le altre due hanno problemi!"`);
+    missionStep = 2;
+    score += 300;
+    updateMissionUI();
+  }
+
+  // Step 2 → 3: sali in ambulanza
+  if (missionStep === 2 && spaceTap && !player.inVehicle) {
+    for (const amb of ambulances) {
+      if (wdist(player, amb) < 1.5) {
+        if (amb.broken) {
+          msg(amb.broken);
         } else {
-            wrap.innerHTML = `<img src="${item.src}" loading="lazy">`; wrap.addEventListener('click', () => openImg(item.src));
+          msg('Falco 31 in moto! Sirene accese — raggiungi il punto emergenza!');
+          player.inVehicle = true;
+          player.vehicle   = amb;
+          amb.angle        = -Math.PI * 0.5; // punta verso l'alto
+          amb.speed        = 0;
+          missionStep      = 3;
+          target.active    = true;
+          score           += 400;
+          updateMissionUI();
         }
-        grid.appendChild(wrap);
-    });
+        break;
+      }
+    }
+  }
+
+  // Step 3: raggiungi il target
+  if (missionStep === 3 && target.active && player.inVehicle) {
+    if (wdist(player.vehicle, target) < 1.2) {
+      triggerVictory(elapsed);
+    }
+  }
+
+  // NPC idle wander (leggero)
+  for (const npc of npcs) {
+    if (frame % 180 === 0) {
+      npc._dx = (Math.random()-0.5)*0.3;
+      npc._dy = (Math.random()-0.5)*0.3;
+    }
+    if (npc._dx) {
+      npc.wx = Math.max(9, Math.min(17, npc.wx + (npc._dx||0)));
+      npc.wy = Math.max(1, Math.min(13, npc.wy + (npc._dy||0)));
+    }
+  }
 }
 
-// LOGICA AUTO-ENTER ALL'APERTURA
-const splash = document.getElementById('splash'), audio = document.getElementById('bg-audio'), hv = document.getElementById('hv'), ppb = document.getElementById('ppb'), viz = document.getElementById('viz');
+// ─── VITTORIA / GAME OVER ───
+async function triggerVictory(elapsedMs) {
+  won = true; gameRunning = false;
+  const timeSec = Math.floor(elapsedMs / 1000);
+  const timeBonus = Math.max(0, Math.floor((MISSION_TIME_MS - elapsedMs) / 100));
+  score += 1000 + timeBonus;
+  liveScoreEl.textContent = score;
 
-window.addEventListener('load', () => {
-    // Entra in automatico dopo 3.2 secondi (tempo dell'animazione)
-    setTimeout(() => {
-        splash.classList.add('hide'); 
-        audio.volume = .75; 
-        
-        // I browser spesso bloccano l'audio se l'utente non ha cliccato lo schermo.
-        // Se lo bloccano, ignoriamo l'errore e l'utente dovrà cliccare "Play" manualmente
-        audio.play().then(() => viz.classList.add('on')).catch((err) => {
-            console.log("Audio in autoplay bloccato dal browser. L'utente deve premere Play.");
-        }); 
-        
-        hv.play().catch(()=>{});
-        initViews(); 
-        caricaContenuti();
-    }, 3200);
-});
+  victoryScoreEl.textContent = `PUNTEGGIO FINALE: ${score} pts`;
+  overlayVictory.style.display = 'flex';
 
-ppb.addEventListener('click', () => {
-    if(audio.paused) { audio.play(); ppb.innerHTML = '<i class="fas fa-pause"></i>'; viz.classList.add('on'); }
-    else { audio.pause(); ppb.innerHTML = '<i class="fas fa-play"></i>'; viz.classList.remove('on'); }
-});
-
-function initViews() {
-    let v = parseInt(localStorage.getItem('pilu_views') || '0'); if(v < 1000) v = Math.floor(Math.random() * 1500 + 1000);
-    v++; localStorage.setItem('pilu_views', v); document.getElementById('view-counter').textContent = v.toLocaleString('it-IT');
-    if(localStorage.getItem('pilu_liked') === 'true') { document.getElementById('like-btn').classList.add('liked'); }
+  await saveScore(playerName, score, elapsedMs);
+  const top = await getTopScores();
+  renderLeaderboard(top);
 }
-document.getElementById('like-btn').addEventListener('click', function() {
-    const on = this.classList.toggle('liked'); localStorage.setItem('pilu_liked', on);
+
+function triggerGameOver() {
+  gameOver = true; gameRunning = false;
+  msg('TEMPO SCADUTO — ambulanza non arrivata in tempo!');
+  overlayGameover.style.display = 'flex';
+}
+
+function renderLeaderboard(scores) {
+  lbBody.innerHTML = '';
+  scores.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    tr.className = `rank-${i+1}${s.name === playerName.toUpperCase() ? ' me':''}`;
+    const mm = Math.floor((s.timeMs||0)/60000);
+    const ss = String(Math.floor(((s.timeMs||0)%60000)/1000)).padStart(2,'0');
+    tr.innerHTML = `<td>${['🥇','🥈','🥉'][i]||'#'+(i+1)}</td><td>${s.name||'???'}</td><td style="text-align:right;color:var(--amber)">${s.score||0}</td><td style="text-align:right;color:var(--dim)">${mm}:${ss}</td>`;
+    lbBody.appendChild(tr);
+  });
+}
+
+// ─── RENDERING ───
+const TILE_W = 64, TILE_H = 32;
+const ISO_OX = W * 0.28, ISO_OY = 80;
+
+function w2s(wx, wy) {
+  return {
+    sx: ISO_OX + (wx - wy) * (TILE_W/2),
+    sy: ISO_OY + (wx + wy) * (TILE_H/2)
+  };
+}
+
+function isoBlock(wx, wy, bw, bh, topClr, rightClr, leftClr, wallH) {
+  // Disegna un blocco isometrico: base bw×bh, altezza wallH
+  // Calcola i 4 angoli del tetto
+  const p00 = w2s(wx,      wy);
+  const p10 = w2s(wx+bw,   wy);
+  const p01 = w2s(wx,      wy+bh);
+  const p11 = w2s(wx+bw,   wy+bh);
+  const dh  = wallH * TILE_H * 0.5; // pixel di altezza
+
+  // Tetto
+  ctx.beginPath();
+  ctx.moveTo(p00.sx, p00.sy - dh);
+  ctx.lineTo(p10.sx, p10.sy - dh);
+  ctx.lineTo(p11.sx, p11.sy - dh);
+  ctx.lineTo(p01.sx, p01.sy - dh);
+  ctx.closePath();
+  ctx.fillStyle = topClr;
+  ctx.fill();
+  // Bordo tetto
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Faccia destra (sud-est)
+  ctx.beginPath();
+  ctx.moveTo(p10.sx, p10.sy - dh);
+  ctx.lineTo(p11.sx, p11.sy - dh);
+  ctx.lineTo(p11.sx, p11.sy);
+  ctx.lineTo(p10.sx, p10.sy);
+  ctx.closePath();
+  ctx.fillStyle = rightClr;
+  ctx.fill();
+  ctx.stroke();
+
+  // Faccia sinistra (sud-ovest)
+  ctx.beginPath();
+  ctx.moveTo(p01.sx, p01.sy - dh);
+  ctx.lineTo(p11.sx, p11.sy - dh);
+  ctx.lineTo(p11.sx, p11.sy);
+  ctx.lineTo(p01.sx, p01.sy);
+  ctx.closePath();
+  ctx.fillStyle = leftClr;
+  ctx.fill();
+  ctx.stroke();
+}
+
+function isoFloor(wx, wy, bw, bh, clr) {
+  const p00 = w2s(wx,    wy);
+  const p10 = w2s(wx+bw, wy);
+  const p01 = w2s(wx,    wy+bh);
+  const p11 = w2s(wx+bw, wy+bh);
+  ctx.beginPath();
+  ctx.moveTo(p00.sx, p00.sy);
+  ctx.lineTo(p10.sx, p10.sy);
+  ctx.lineTo(p11.sx, p11.sy);
+  ctx.lineTo(p01.sx, p01.sy);
+  ctx.closePath();
+  ctx.fillStyle = clr;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
+}
+
+// ─── DRAW SCENE ───
+function drawScene() {
+  // Cielo / sfondo notturno
+  ctx.fillStyle = '#070d16';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── PARCHEGGIO ──
+  // Asfalto (tiles 0..8, 0..14)
+  for (let tx = 0; tx <= 7; tx++) {
+    for (let ty = 0; ty <= 13; ty++) {
+      const clr = (tx+ty)%2 === 0 ? '#1c2a38' : '#1a2633';
+      isoFloor(tx, ty, 1, 1, clr);
+    }
+  }
+  // Strisce parcheggio
+  for (const bay of PARK_BAYS) {
+    // Linee gialle
+    isoFloor(bay.x - 0.05, bay.y - 0.9, 0.1, 1.8, '#ffc400');
+    isoFloor(bay.x + 0.95, bay.y - 0.9, 0.1, 1.8, '#ffc400');
+    // Testo slot (non su canvas iso facilmente — omettiamo per pulizia visiva)
+  }
+
+  // ── EDIFICIO OSPEDALE ──
+  // Pavimento interno
+  for (let tx = 8; tx <= 17; tx++) {
+    for (let ty = 0; ty <= 13; ty++) {
+      const clr = (tx+ty)%2 === 0 ? '#e8eaf0' : '#dde0ea';
+      isoFloor(tx, ty, 1, 1, clr);
+    }
+  }
+
+  // Muri perimetrali edificio (H=2)
+  // Muro nord
+  isoBlock(8, -0.5, 10, 0.5, '#b0bec5','#90a4ae','#78909c', 2.2);
+  // Muro ovest (portico con porte)
+  isoBlock(7.5, 0, 0.5, 4.2, '#b0bec5','#90a4ae','#78909c', 2.2); // segmento nord
+  isoBlock(7.5, 4.8, 0.5, 3.4, '#b0bec5','#90a4ae','#78909c', 2.2); // tra porta 1-2
+  isoBlock(7.5, 8.8, 0.5, 3.4, '#b0bec5','#90a4ae','#78909c', 2.2); // tra porta 2-3
+  isoBlock(7.5, 12.8, 0.5, 1.2, '#b0bec5','#90a4ae','#78909c', 2.2); // fondo
+  // Muro est
+  isoBlock(17.5, 0, 0.5, 14, '#b0bec5','#90a4ae','#78909c', 2.2);
+  // Muro sud
+  isoBlock(8, 13.5, 10, 0.5, '#b0bec5','#90a4ae','#78909c', 2.2);
+
+  // ── DIVISORI INTERNI (Centrale / Amb1 / Amb2) ──
+  // Divisore 1 (y=4.5) con porta al centro
+  isoBlock(8, 4.4, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
+  isoBlock(13.5, 4.4, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
+  // Porta divisore 1 (gap 8+4..8+4+1.5)
+  // visivamente il gap è dove non c'è blocco
+  
+  // Divisore 2 (y=9)
+  isoBlock(8, 8.9, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
+  isoBlock(13.5, 8.9, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
+
+  // ── PORTE (archi colorati) ──
+  drawDoor(7.5, 4.2);  // porta Centrale
+  drawDoor(7.5, 8.8);  // porta Amb1
+  drawDoor(12, 4.4);   // porta divisore 1
+  drawDoor(12, 8.9);   // porta divisore 2
+
+  // ── ARREDI INTERNI ──
+  // Centrale: scrivania e radio
+  isoBlock(10, 1, 2, 1, '#546e7a','#455a64','#37474f', 0.6);  // scrivania
+  isoBlock(15, 2, 1.5, 1, '#546e7a','#455a64','#37474f', 0.6);
+  drawEquipment(10.5, 0.5, '📻'); // radio
+  drawEquipment(15.5, 1.5, '💻');
+
+  // Amb1: lettino
+  isoBlock(10, 5.5, 2, 1.5, '#ef9a9a','#e57373','#ef9a9a', 0.4);
+  isoBlock(14, 6, 2, 1.5, '#80cbc4','#4db6ac','#26a69a', 0.6);
+  drawEquipment(10.5, 5.2, '🛏');
+  drawEquipment(14.5, 5.5, '💊');
+
+  // Amb2: lettino
+  isoBlock(10, 10, 2, 1.5, '#ef9a9a','#e57373','#ef9a9a', 0.4);
+  isoBlock(14, 10.5, 2, 1.5, '#80cbc4','#4db6ac','#26a69a', 0.6);
+  drawEquipment(10.5, 9.5, '🛏');
+  drawEquipment(14.5, 10, '💉');
+
+  // ── AMBULANZE PARCHEGGIATE ──
+  for (const amb of ambulances) {
+    if (player.inVehicle && player.vehicle === amb) continue;
+    drawAmbulance(amb.wx, amb.wy, amb.angle, amb.broken ? '#e74c3c' : '#f5f6fa', false);
+    drawLabel(amb.wx, amb.wy, -1.4, amb.id, amb.broken ? '#ef5350' : '#90caf9');
+  }
+
+  // ── TARGET EMERGENZA ──
+  if (target.active) {
+    const {sx, sy} = w2s(target.wx, target.wy);
+    const pulse = Math.sin(frame * 0.08) * 12 + 20;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(sx, sy, pulse, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,23,68,0.2)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 14, 0, Math.PI*2);
+    ctx.fillStyle = '#ff1744';
+    ctx.shadowColor = '#ff1744'; ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('SOS', sx, sy + 5);
+
+    // Freccia guida
+    if (player.inVehicle) {
+      const {sx: px, sy: py} = w2s(player.vehicle.wx, player.vehicle.wy);
+      const dx = sx - px, dy = sy - py;
+      const dist_ = Math.sqrt(dx*dx+dy*dy);
+      if (dist_ > 80) {
+        const nx = dx/dist_, ny = dy/dist_;
+        ctx.save();
+        ctx.globalAlpha = 0.7 + Math.sin(frame*0.1)*0.3;
+        ctx.fillStyle = '#ff1744';
+        ctx.translate(px + nx*55, py + ny*55);
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-6,-6); ctx.lineTo(-6,6); ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+
+  // ── NPC ──
+  for (const npc of npcs) {
+    drawHuman(npc.wx, npc.wy, npc.color, npc.name, npc.role);
+  }
+
+  // ── PLAYER ──
+  if (player.inVehicle) {
+    const v = player.vehicle;
+    drawAmbulance(v.wx, v.wy, v.angle, '#f5f6fa', true);
+    drawLabel(v.wx, v.wy, -1.6, v.id + ' ►', '#00e676');
+  } else {
+    drawHuman(player.wx, player.wy, '#fdd835', playerName.toUpperCase().slice(0,6), 'TU');
+  }
+
+  // ── ETICHETTE STANZE ──
+  drawRoomLabel(13, 0.5, '📡 CENTRALE OPERATIVA');
+  drawRoomLabel(13, 5.5, '🏥 AMBULATORIO 1');
+  drawRoomLabel(13, 10,  '🏥 AMBULATORIO 2');
+  drawRoomLabel(3,  0.5, '🚑 PARCHEGGIO');
+
+  // ── LAMPIONI ──
+  drawLamppost(1, 1);
+  drawLamppost(6, 1);
+  drawLamppost(1, 7);
+  drawLamppost(6, 7);
+  drawLamppost(1, 13);
+}
+
+// ─── HELPER DRAW ───
+function drawDoor(wx, wy) {
+  const {sx, sy} = w2s(wx, wy);
+  ctx.save();
+  ctx.fillStyle = '#4fc3f7';
+  ctx.shadowColor = '#29b6f6'; ctx.shadowBlur = 8;
+  ctx.fillRect(sx - 6, sy - 18, 12, 18);
+  ctx.restore();
+}
+
+function drawEquipment(wx, wy, emoji) {
+  const {sx, sy} = w2s(wx, wy);
+  ctx.font = '14px Arial'; ctx.textAlign = 'center';
+  ctx.fillText(emoji, sx, sy - 4);
+}
+
+function drawLabel(wx, wy, dyTile, text, color) {
+  const {sx, sy} = w2s(wx, wy);
+  ctx.save();
+  ctx.font = 'bold 11px "Share Tech Mono",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(sx - 36, sy + dyTile * TILE_H/2 - 11, 72, 14);
+  ctx.fillStyle = color;
+  ctx.fillText(text, sx, sy + dyTile * TILE_H/2);
+  ctx.restore();
+}
+
+function drawRoomLabel(cx, cy, text) {
+  const {sx, sy} = w2s(cx, cy);
+  ctx.save();
+  ctx.font = 'bold 12px "Share Tech Mono",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(sx - 80, sy - 13, 160, 16);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillText(text, sx, sy);
+  ctx.restore();
+}
+
+function drawHuman(wx, wy, bodyColor, nameText, roleText) {
+  const {sx, sy} = w2s(wx, wy);
+  const h = 24; // pixel altezza personaggio
+
+  ctx.save();
+  // Ombra
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy + 2, 10, 5, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Corpo (rettangolo isometrico approssimato)
+  ctx.fillStyle = bodyColor;
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+  ctx.fillRect(sx - 7, sy - h, 14, 14); // torso
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  // Gambe
+  ctx.fillStyle = '#37474f';
+  ctx.fillRect(sx - 7, sy - h + 14, 5, 8);
+  ctx.fillRect(sx + 2, sy - h + 14, 5, 8);
+
+  // Testa
+  ctx.fillStyle = '#ffcc80';
+  ctx.beginPath();
+  ctx.arc(sx, sy - h - 4, 7, 0, Math.PI*2);
+  ctx.fill();
+
+  // Nome
+  ctx.font = '9px "Share Tech Mono",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#000';
+  ctx.fillRect(sx - 30, sy - h - 18, 60, 11);
+  ctx.fillStyle = bodyColor === '#fdd835' ? '#fdd835' : '#e3f2fd';
+  ctx.fillText(nameText.length > 14 ? nameText.slice(0,14) : nameText, sx, sy - h - 9);
+
+  ctx.restore();
+}
+
+function drawAmbulance(wx, wy, angle, bodyColor, active) {
+  const {sx, sy} = w2s(wx, wy);
+  ctx.save();
+  ctx.translate(sx, sy - 8);
+
+  // Ombra
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(0, 10, 28, 12, angle, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.rotate(angle + Math.PI * 0.25); // offset isometrico
+
+  // Carrozzeria
+  ctx.fillStyle = bodyColor;
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
+  ctx.beginPath(); ctx.roundRect(-18, -30, 36, 60, 6); ctx.fill();
+  ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+  // Tetto in rilievo
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(-16, -26, 32, 48);
+
+  // Striscia rossa laterale
+  ctx.fillStyle = '#c62828';
+  ctx.fillRect(-18, -10, 36, 6);
+
+  // Vetri
+  ctx.fillStyle = '#263238';
+  ctx.beginPath(); ctx.roundRect(-14, -26, 28, 14, 3); ctx.fill();
+  ctx.fillRect(-18, 4, 5, 22);
+  ctx.fillRect(13, 4, 5, 22);
+
+  // Croce rossa
+  ctx.fillStyle = '#f44336';
+  ctx.fillRect(-6, 12, 12, 4);
+  ctx.fillRect(-2, 8, 4, 12);
+
+  // Barra lampeggiante
+  ctx.fillStyle = '#546e7a';
+  ctx.fillRect(-14, -32, 28, 6);
+
+  if (active) {
+    // Lampeggio blu/rosso
+    if (frame % 30 < 15) {
+      ctx.fillStyle = '#2196f3'; ctx.shadowColor = '#2196f3'; ctx.shadowBlur = 20;
+      ctx.fillRect(-14, -32, 12, 6);
+      ctx.fillStyle = '#f44336'; ctx.shadowColor = '#f44336';
+      ctx.fillRect(2, -32, 12, 6);
+    } else {
+      ctx.fillStyle = '#f44336'; ctx.shadowColor = '#f44336'; ctx.shadowBlur = 20;
+      ctx.fillRect(-14, -32, 12, 6);
+      ctx.fillStyle = '#2196f3'; ctx.shadowColor = '#2196f3';
+      ctx.fillRect(2, -32, 12, 6);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.restore();
+}
+
+function drawLamppost(wx, wy) {
+  const {sx, sy} = w2s(wx, wy);
+  // Luce alone
+  ctx.save();
+  const grad = ctx.createRadialGradient(sx, sy - 40, 2, sx, sy - 40, 50);
+  grad.addColorStop(0, 'rgba(255,244,180,0.25)');
+  grad.addColorStop(1, 'rgba(255,244,180,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(sx, sy - 40, 50, 0, Math.PI*2); ctx.fill();
+  // Palo
+  ctx.fillStyle = '#546e7a';
+  ctx.fillRect(sx - 2, sy - 50, 4, 50);
+  // Testa
+  ctx.fillStyle = '#ffe57f';
+  ctx.shadowColor = '#ffe57f'; ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(sx, sy - 52, 5, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+// ─── DRAW LOOP ───
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawScene();
+
+  // Vignette notturna
+  const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.9);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ─── EVENTI UI ───
+document.getElementById('start-btn').addEventListener('click', () => {
+  const inp = document.getElementById('player-name-input').value.trim();
+  playerName = inp.length > 0 ? inp.toUpperCase() : 'AAA';
+  overlayTitle.style.display = 'none';
+  initGame();
+  msg(MISSION_STEPS[0].text.replace('MISSIONE 1/4 — ',''));
 });
 
-function tick() {
-    const now = Date.now();
-    document.querySelectorAll('.cd').forEach(el => {
-        const diff = new Date(el.dataset.date) - now;
-        if(diff <= 0) { el.innerHTML = `<span class="conc">Concluso</span>`; return; }
-        const d = Math.floor(diff / 864e5), h = Math.floor(diff % 864e5 / 36e5), m = Math.floor(diff % 36e5 / 6e4), s = Math.floor(diff % 6e4 / 1e3);
-        el.innerHTML = `<div class="tb"><span class="tv">${d}</span><span class="tl">GG</span></div><div class="tb"><span class="tv">${h}</span><span class="tl">H</span></div><div class="tb"><span class="tv">${m}</span><span class="tl">M</span></div><div class="tb"><span class="tv">${s}</span><span class="tl">S</span></div>`;
-    });
-} setInterval(tick, 1000);
+document.getElementById('player-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('start-btn').click();
+});
 
-const lb = document.getElementById('lb'), lbi = document.getElementById('lbi'), lbv = document.getElementById('lbv');
-function openImg(src) { lbi.src = src; lbi.style.display = 'block'; lbv.style.display = 'none'; lbv.pause(); lb.classList.add('show'); }
-function openVid(src) { lbv.innerHTML = ''; const s = document.createElement('source'); s.src = src; s.type = 'video/mp4'; lbv.appendChild(s); lbv.load(); lbv.style.display = 'block'; lbi.style.display = 'none'; lb.classList.add('show'); lbv.play().catch(()=>{}); }
-document.getElementById('lbc').addEventListener('click', () => { lb.classList.remove('show'); lbv.pause(); lbv.innerHTML = ''; });
+document.getElementById('play-again-btn').addEventListener('click', () => {
+  overlayVictory.style.display = 'none';
+  overlayTitle.style.display = 'flex';
+  document.getElementById('player-name-input').value = playerName;
+  document.getElementById('player-name-input').focus();
+});
 
-new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('on'); }), {threshold: .06}).observe(document.body);
-document.querySelectorAll('.reveal').forEach(el => new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('on'); }), {threshold: .06}).observe(el));
+document.getElementById('retry-btn').addEventListener('click', () => {
+  overlayGameover.style.display = 'none';
+  overlayTitle.style.display = 'flex';
+  document.getElementById('player-name-input').value = playerName;
+  document.getElementById('player-name-input').focus();
+});
 
-// EFFETTO FUMO
-const canvas = document.getElementById('sc'), ctx = canvas.getContext('2d');
-const rsz = () => { canvas.width = innerWidth; canvas.height = innerHeight; }; window.addEventListener('resize', rsz); rsz();
-const pts = Array.from({length: 28}, () => ({x: Math.random() * canvas.width, y: canvas.height + Math.random() * 180, r: Math.random() * 80 + 35, vx: Math.random() * .3 - .15, vy: -(Math.random() * .6 + .2), op: Math.random() * .045 + .01}));
-(function smoke() { ctx.clearRect(0, 0, canvas.width, canvas.height); pts.forEach(p => { p.x += p.vx; p.y += p.vy; if(p.y < -p.r * 2) { p.y = canvas.height + p.r; p.x = Math.random() * canvas.width; } if(p.x < -p.r) p.x = canvas.width + p.r; if(p.x > canvas.width + p.r) p.x = -p.r; const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r); g.addColorStop(0, `rgba(210,185,140,${p.op})`); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); }); requestAnimationFrame(smoke); })();
+loop();
 </script>
 </body>
 </html>
