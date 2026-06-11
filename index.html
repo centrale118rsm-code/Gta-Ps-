@@ -2,1233 +2,1466 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>118 San Marino — Turno di Notte</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>118 San Marino — Turno di Guardia</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bangers&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06101c;--panel:#0b1a2e;--border:#1a3050;
+  --green:#1de982;--red:#ff2e5b;--amber:#ffc233;--blue:#33b4ff;
+  --white:#e8f4fd;--dim:#4a6a88;
+  --comic:'Bangers',cursive;--mono:'Share Tech Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:var(--mono);user-select:none;-webkit-user-select:none;touch-action:none}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100vh}
+#hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:linear-gradient(#0a1828,#06101c);gap:10px}
+#hdr-title{font-family:var(--comic);font-size:clamp(14px,2.5vw,22px);color:var(--red);text-shadow:0 0 14px rgba(255,46,91,.5);letter-spacing:2px;white-space:nowrap}
+#hdr-title span{color:var(--amber)}
+#hdr-right{display:flex;gap:14px;align-items:center;flex-shrink:0}
+#score-el{font-family:var(--mono);font-size:clamp(11px,1.8vw,15px);color:var(--amber)}
+#level-el{font-family:var(--mono);font-size:11px;color:var(--blue)}
+#combo-el{font-family:var(--mono);font-size:11px;color:var(--green);display:none}
 
-  :root {
-    --bg:       #060a0f;
-    --panel:    #0d1520;
-    --border:   #1a2e44;
-    --green:    #00e676;
-    --red:      #ff1744;
-    --amber:    #ffc400;
-    --blue:     #00b0ff;
-    --white:    #e8f4fd;
-    --dim:      #4a6278;
-    --font-ui:  'Share Tech Mono', monospace;
-    --font-hud: 'Orbitron', sans-serif;
-  }
+/* ── STAGE ── */
+#stage{position:relative;flex:1;overflow:hidden;background:#04080e}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#stage::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 3px);pointer-events:none;z-index:5}
 
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: var(--font-ui);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 100vh;
-    overflow: hidden;
-    user-select: none;
-  }
+/* ── OVERLAYS ── */
+.ov{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(4,8,14,.95);padding:18px;text-align:center;overflow-y:auto}
+.ov.off{display:none}
+.ov h2{font-family:var(--comic);font-size:clamp(22px,4vw,38px);letter-spacing:3px;margin-bottom:12px}
+.h-amber{color:var(--amber);text-shadow:0 0 24px rgba(255,194,51,.55)}
+.h-green{color:var(--green);text-shadow:0 0 24px rgba(29,233,130,.55)}
+.h-red{color:var(--red);text-shadow:0 0 24px rgba(255,46,91,.55)}
+.ov p{color:var(--dim);font-size:12px;margin-bottom:5px;line-height:1.6}
+.story{max-width:500px;background:rgba(255,194,51,.04);border:1px solid #2a2800;border-radius:4px;padding:12px 16px;font-size:clamp(11px,2.3vw,13px);line-height:1.75;color:#b5c5d5;text-align:left;margin:10px 0}
+.story b{color:var(--amber)}
+.btn{margin:6px 4px;padding:10px 26px;font-family:var(--comic);font-size:clamp(13px,2.2vw,17px);letter-spacing:2px;border:2px solid;cursor:pointer;background:transparent;transition:.18s;border-radius:3px}
+.bg{border-color:var(--green);color:var(--green)}.bg:hover{background:var(--green);color:#000}
+.br{border-color:var(--red);color:var(--red)}.br:hover{background:var(--red);color:#000}
+.ba{border-color:var(--amber);color:var(--amber)}.ba:hover{background:var(--amber);color:#000}
+.inp{margin:8px 0;padding:9px 16px;font-family:var(--mono);font-size:16px;background:var(--panel);border:2px solid var(--amber);color:var(--amber);letter-spacing:3px;text-align:center;width:min(280px,80vw);text-transform:uppercase;outline:none;border-radius:2px}
+.inp::placeholder{color:var(--dim)}
 
-  /* ─── HEADER ─── */
-  #header {
-    width: 100%;
-    max-width: 960px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  #header h1 {
-    font-family: var(--font-hud);
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: var(--red);
-    text-shadow: 0 0 20px rgba(255,23,68,0.6);
-  }
-  #header h1 span { color: var(--amber); }
-  #score-display {
-    font-family: var(--font-hud);
-    font-size: 13px;
-    color: var(--amber);
-    text-shadow: 0 0 10px rgba(255,196,0,0.5);
-    letter-spacing: 2px;
-  }
+/* ── LEADERBOARD ── */
+.lb-wrap{width:min(480px,95vw);margin:10px 0}
+.lb-tabs{display:flex;gap:6px;margin-bottom:10px;justify-content:center}
+.lb-tab{font-family:var(--mono);font-size:11px;padding:4px 14px;border:1px solid var(--border);color:var(--dim);cursor:pointer;background:transparent;border-radius:2px}
+.lb-tab.on,.lb-tab:hover{border-color:var(--amber);color:var(--amber)}
+table.lb{width:100%;border-collapse:collapse;font-size:12px}
+table.lb th{color:var(--amber);padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;font-weight:normal}
+table.lb td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+.lb-me td{color:var(--green)!important}
 
-  /* ─── CANVAS WRAPPER ─── */
-  #canvas-wrap {
-    position: relative;
-    width: 960px;
-    height: 600px;
-    flex-shrink: 0;
-  }
-  #gameCanvas {
-    display: block;
-    width: 960px;
-    height: 600px;
-    image-rendering: pixelated;
-  }
-  /* CRT scanlines overlay */
-  #canvas-wrap::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.08) 2px,
-      rgba(0,0,0,0.08) 4px
-    );
-    pointer-events: none;
-    z-index: 10;
-  }
+/* ── SPEECH BUBBLE ── */
+#bubbles{position:absolute;inset:0;pointer-events:none;z-index:15}
+.bubble{position:absolute;background:#fff;color:#111;font-family:var(--comic);font-size:clamp(11px,2vw,14px);padding:6px 10px;border-radius:8px;border:2px solid #222;max-width:200px;line-height:1.3;letter-spacing:.5px;white-space:pre-wrap;box-shadow:3px 3px 0 #222}
+.bubble::after{content:'';position:absolute;bottom:-10px;left:14px;border:5px solid transparent;border-top-color:#222}
+.bubble.right::after{left:auto;right:14px}
+.bubble.red-b{background:#ffe0e0;border-color:#c00}
+.bubble.red-b::after{border-top-color:#c00}
+.bubble.green-b{background:#e0ffe8;border-color:#080}
+.bubble.blue-b{background:#e0f0ff;border-color:#006}
+.bubble.blue-b::after{border-top-color:#006}
 
-  /* ─── HUD BAR ─── */
-  #hud {
-    width: 960px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--green);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  #mission-icon {
-    font-size: 22px;
-    flex-shrink: 0;
-    animation: pulse-icon 1s ease-in-out infinite alternate;
-  }
-  @keyframes pulse-icon { from { opacity: 1; } to { opacity: 0.4; } }
-  #dialogue {
-    color: var(--green);
-    font-size: 13px;
-    line-height: 1.4;
-    flex: 1;
-    text-shadow: 0 0 8px rgba(0,230,118,0.4);
-  }
-  #controls-hint {
-    color: var(--dim);
-    font-size: 11px;
-    text-align: right;
-    line-height: 1.7;
-    white-space: nowrap;
-    border-left: 1px solid var(--border);
-    padding-left: 16px;
-  }
-  #controls-hint strong { color: var(--amber); }
+/* ── PHONE MODAL ── */
+#phone-modal{position:absolute;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:rgba(4,8,14,.88)}
+#phone-modal.show{display:flex}
+#phone-box{background:#111;border:3px solid var(--green);border-radius:8px;padding:20px 24px;max-width:480px;width:90%;font-size:13px;line-height:1.6}
+#phone-who{color:var(--green);font-size:10px;letter-spacing:3px;margin-bottom:6px}
+#phone-txt{color:#e8f4fd;font-size:15px;margin-bottom:12px;min-height:48px}
+#phone-choices{display:flex;flex-direction:column;gap:7px}
+.pchoice{background:#1a2a1a;border:1px solid var(--green);color:var(--green);font-family:var(--mono);font-size:12px;padding:8px 12px;cursor:pointer;text-align:left;border-radius:2px}
+.pchoice:hover{background:var(--green);color:#000}
+#phone-next{background:transparent;border:1px solid var(--dim);color:var(--dim);font-family:var(--mono);font-size:11px;padding:6px 14px;cursor:pointer;letter-spacing:2px;margin-top:8px;width:100%}
+#phone-next:hover{color:var(--white)}
 
-  /* ─── TIMER BAR ─── */
-  #timer-row {
-    width: 960px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 16px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--dim);
-  }
-  #timer-bar-outer {
-    flex: 1;
-    height: 6px;
-    background: #1a2e44;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  #timer-bar-inner {
-    height: 100%;
-    background: linear-gradient(90deg, var(--green), var(--amber));
-    border-radius: 3px;
-    transition: width 0.1s linear, background 0.3s;
-    width: 100%;
-  }
-  #timer-label { color: var(--amber); font-family: var(--font-hud); font-size: 12px; letter-spacing: 1px; }
+/* ── HUD (bottom) ── */
+#hud{display:flex;align-items:center;gap:10px;padding:7px 12px;background:var(--panel);border-top:2px solid var(--green);flex-shrink:0}
+#hud-ic{font-size:20px;flex-shrink:0;animation:hudp 1.1s ease-in-out infinite alternate}
+@keyframes hudp{from{opacity:1}to{opacity:.35}}
+#hud-msg{color:var(--green);font-size:clamp(10px,2vw,13px);line-height:1.3;flex:1}
+#hud-keys{color:var(--dim);font-size:10px;text-align:right;border-left:1px solid var(--border);padding-left:10px;white-space:nowrap;line-height:1.7}
+#hud-keys b{color:var(--amber)}
+@media(max-width:600px){#hud-keys{display:none}}
 
-  /* ─── OVERLAY SCREENS ─── */
-  .overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    background: rgba(6,10,15,0.92);
-  }
-  .overlay h2 {
-    font-family: var(--font-hud);
-    font-size: 28px;
-    letter-spacing: 6px;
-    margin-bottom: 24px;
-  }
-  .overlay.green h2 { color: var(--green); text-shadow: 0 0 30px rgba(0,230,118,0.7); }
-  .overlay.red   h2 { color: var(--red);   text-shadow: 0 0 30px rgba(255,23,68,0.7); }
-  .overlay.amber h2 { color: var(--amber); text-shadow: 0 0 30px rgba(255,196,0,0.7); }
+/* ── DRIVING HUD ── */
+#drv-hud{position:absolute;top:8px;left:8px;z-index:10;display:none;flex-direction:column;gap:6px}
+#drv-hud.show{display:flex}
+.dhud-box{background:rgba(5,12,20,.85);border:1px solid var(--border);border-radius:3px;padding:6px 10px}
+#spd-val{font-family:var(--mono);font-size:22px;color:var(--blue);line-height:1}
+#spd-unit{font-size:9px;color:var(--dim);letter-spacing:1px}
+#siren-el{font-size:10px;margin-top:2px;color:var(--dim)}
+#siren-el.on{color:var(--red);animation:sirpulse .4s step-end infinite}
+@keyframes sirpulse{0%,100%{opacity:1}50%{opacity:.3}}
+#timer-drv{font-family:var(--mono);font-size:18px;color:var(--amber)}
+#lvl-bar-wrap{width:100%;height:6px;background:#0a1726;border-radius:3px;overflow:hidden}
+#lvl-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--amber));border-radius:3px;width:100%;transition:width .1s}
 
-  .overlay p { color: var(--dim); font-size: 13px; margin-bottom: 6px; text-align: center; }
-  .overlay .big { color: var(--white); font-size: 20px; font-family: var(--font-hud); margin: 10px 0; }
+/* ── MINIMAP ── */
+#minimap{position:absolute;top:8px;right:8px;z-index:10;width:120px;height:96px;border:2px solid var(--border);border-radius:3px;background:rgba(4,8,14,.85);display:none}
+#minimap.show{display:block}
+#mmc{width:100%;height:100%}
 
-  .btn {
-    margin-top: 20px;
-    padding: 10px 30px;
-    font-family: var(--font-hud);
-    font-size: 13px;
-    letter-spacing: 3px;
-    border: 2px solid var(--green);
-    color: var(--green);
-    background: transparent;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-  }
-  .btn:hover { background: var(--green); color: var(--bg); }
-  .btn.red-btn { border-color: var(--red); color: var(--red); }
-  .btn.red-btn:hover { background: var(--red); color: var(--bg); }
-  .btn.amber-btn { border-color: var(--amber); color: var(--amber); }
-  .btn.amber-btn:hover { background: var(--amber); color: var(--bg); }
+/* ── PROX / TOAST ── */
+#prox{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(29,233,130,.15);border:1px solid var(--green);color:var(--green);font-size:12px;padding:5px 16px;border-radius:3px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:12;white-space:nowrap}
+#prox.show{opacity:1}
+#toast{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);background:rgba(4,8,14,.95);border:2px solid var(--amber);color:var(--amber);font-size:clamp(12px,3vw,18px);font-weight:bold;padding:11px 22px;text-align:center;max-width:88%;pointer-events:none;opacity:0;transition:opacity .25s;z-index:35;white-space:pre-line;border-radius:4px;font-family:var(--comic);letter-spacing:1px}
+#toast.show{opacity:1}
+#toast.red{border-color:var(--red);color:var(--red)}
+#toast.green{border-color:var(--green);color:var(--green)}
+#toast.blue{border-color:var(--blue);color:var(--blue)}
 
-  /* Name input */
-  .name-input {
-    margin-top: 12px;
-    padding: 8px 16px;
-    font-family: var(--font-hud);
-    font-size: 16px;
-    background: var(--panel);
-    border: 2px solid var(--amber);
-    color: var(--amber);
-    letter-spacing: 3px;
-    text-align: center;
-    width: 260px;
-    text-transform: uppercase;
-    outline: none;
-  }
-  .name-input::placeholder { color: var(--dim); }
+/* ── SIREN FLASH ── */
+#sflash{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0}
 
-  /* ─── LEADERBOARD ─── */
-  #leaderboard-table {
-    margin-top: 12px;
-    width: 360px;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-  #leaderboard-table th {
-    color: var(--amber);
-    padding: 4px 10px;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-  }
-  #leaderboard-table td {
-    padding: 4px 10px;
-    color: var(--white);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  #leaderboard-table tr:first-child td { color: var(--amber); font-size: 14px; }
-  .rank-1 td:first-child { color: var(--amber); }
-  .rank-2 td:first-child { color: #b0bec5; }
-  .rank-3 td:first-child { color: #bf9853; }
-  .me td { color: var(--green) !important; }
-
-  /* ─── PROXIMITY HINT ─── */
-  #proximity-hint {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,230,118,0.15);
-    border: 1px solid var(--green);
-    color: var(--green);
-    font-family: var(--font-ui);
-    font-size: 12px;
-    padding: 4px 14px;
-    border-radius: 3px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-    z-index: 20;
-    white-space: nowrap;
-  }
-  #proximity-hint.visible { opacity: 1; }
+/* ── TOUCH CONTROLS ── */
+#touch{position:absolute;bottom:0;left:0;right:0;height:140px;z-index:20;pointer-events:none;display:none}
+#touch.show{display:block}
+#joy-zone{position:absolute;left:12px;bottom:12px;width:112px;height:112px;pointer-events:all}
+#joy-base{position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2)}
+#joy-thumb{position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(255,194,51,.55);top:50%;left:50%;transform:translate(-50%,-50%)}
+.tbtn{position:absolute;border-radius:50%;pointer-events:all;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;text-align:center;font-family:var(--mono);line-height:1.1;border:2px solid}
+#tb-e{right:14px;bottom:18px;width:68px;height:68px;background:rgba(29,233,130,.75);border-color:#5eefaa}
+#tb-punch{right:94px;bottom:44px;width:54px;height:54px;background:rgba(255,120,0,.8);border-color:#ffaa44;font-size:20px}
+#tb-siren{right:18px;bottom:98px;width:48px;height:48px;background:rgba(255,46,91,.8);border-color:#ff7a9a;font-size:18px}
 </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div id="header">
-  <h1>🚑 118 <span>SAN MARINO</span> — TURNO DI NOTTE</h1>
-  <div id="score-display">PUNTEGGIO: <span id="live-score">0</span></div>
-</div>
-
-<!-- TIMER -->
-<div id="timer-row">
-  <span id="timer-label">TEMPO: <span id="timer-val">00:00</span></span>
-  <div id="timer-bar-outer"><div id="timer-bar-inner"></div></div>
-  <span>STEP <span id="step-val">1</span>/4</span>
-</div>
-
-<!-- CANVAS -->
-<div id="canvas-wrap">
-  <canvas id="gameCanvas" width="960" height="600"></canvas>
-  <div id="proximity-hint">[ SPAZIO ] Sali a bordo</div>
-
-  <!-- OVERLAY: TITLE / NAME ENTRY -->
-  <div class="overlay amber" id="overlay-title">
-    <h2>🚑 PRONTO SOCCORSO 118</h2>
-    <p>TURNO DI NOTTE — SAN MARINO REPUBLIC</p>
-    <p style="margin-top:16px">Inserisci il tuo nome per la classifica:</p>
-    <input class="name-input" id="player-name-input" maxlength="12" placeholder="AAA" autofocus>
-    <button class="btn amber-btn" id="start-btn" style="margin-top:16px">INIZIA TURNO</button>
-    <div style="margin-top:24px; color:var(--dim); font-size:11px">
-      W/S: Avanti/Indietro &nbsp;|&nbsp; A/D: Sterza &nbsp;|&nbsp; SPAZIO: Interagisci
+<div id="app">
+  <div id="hdr">
+    <div id="hdr-title">🚑 118 <span>SAN MARINO</span></div>
+    <div id="hdr-right">
+      <div id="combo-el"></div>
+      <div id="level-el">LV 1</div>
+      <div id="score-el">PT: <span id="score-v">0</span></div>
     </div>
   </div>
-
-  <!-- OVERLAY: VICTORY -->
-  <div class="overlay green" id="overlay-victory" style="display:none">
-    <h2>✅ EMERGENZA RISOLTA!</h2>
-    <p>Il paziente è in buone mani.</p>
-    <p class="big" id="victory-score-text">PUNTEGGIO: —</p>
-    <div id="lb-section">
-      <p style="color:var(--amber);margin-top:16px">CLASSIFICA GLOBALE</p>
-      <table id="leaderboard-table"><tbody id="lb-body"></tbody></table>
+  <div id="stage">
+    <canvas id="gc"></canvas>
+    <div id="sflash"></div>
+    <div id="bubbles"></div>
+    <div id="minimap"><canvas id="mmc"></canvas></div>
+    <div id="drv-hud">
+      <div class="dhud-box"><div id="spd-val">0</div><div id="spd-unit">KM/H</div><div id="siren-el">SIRENA OFF</div></div>
+      <div class="dhud-box"><div id="timer-drv">0.0s</div></div>
+      <div class="dhud-box" style="padding:4px 8px"><div style="font-size:9px;color:var(--dim);margin-bottom:3px">PSICOTICI</div><div id="lvl-bar-wrap"><div id="lvl-bar"></div></div></div>
     </div>
-    <div style="display:flex;gap:12px">
-      <button class="btn" id="play-again-btn">GIOCA ANCORA</button>
+    <div id="prox"></div>
+    <div id="toast"></div>
+    <div id="bubbles"></div>
+
+    <!-- PHONE MODAL -->
+    <div id="phone-modal">
+      <div id="phone-box">
+        <div id="phone-who"></div>
+        <div id="phone-txt"></div>
+        <div id="phone-choices"></div>
+        <button id="phone-next">[ PREMI INVIO / TOCCA ]</button>
+      </div>
+    </div>
+
+    <!-- INTRO -->
+    <div class="ov" id="ov-intro">
+      <h2 class="h-amber">🚑 118 SAN MARINO</h2>
+      <p style="color:var(--white);letter-spacing:2px;font-size:13px">TURNO DI GUARDIA — NOTTE FONDA</p>
+      <div class="story">
+        <b>23:00. Sei appena entrato in turno.</b><br>
+        Il pronto soccorso è un casino: medici nascosti, infermieri incazzati, autisti che dormono.<br><br>
+        Quando squilla il telefono in centrale <b>tocca a te rispondere</b>, fare il triage, trovare il medico che si è nascosto, convincere l'infermiere a venire, e salire sull'ambulanza.<br><br>
+        In strada: <b style="color:var(--red)">psicotici crescenti vogliono assalirti.</b> Puoi scendere e picchiarli col tuo equipaggio.<br>
+        <b>Arriva nel minor tempo possibile.</b>
+      </div>
+
+      <!-- LEADERBOARD before play -->
+      <div class="lb-wrap">
+        <div class="lb-tabs">
+          <button class="lb-tab on" onclick="switchLbTab(this,'oggi')">OGGI</button>
+          <button class="lb-tab" onclick="switchLbTab(this,'settimana')">SETTIMANA</button>
+          <button class="lb-tab" onclick="switchLbTab(this,'alltime')">ALL TIME</button>
+        </div>
+        <table class="lb"><thead><tr><th>#</th><th>Nome</th><th>Tempo</th><th>Punteggio</th><th>Lv</th></tr></thead><tbody id="lb-intro"></tbody></table>
+      </div>
+
+      <p style="color:var(--white);margin-top:10px">Il tuo nome:</p>
+      <input class="inp" id="name-inp" maxlength="12" placeholder="NOME...">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button class="btn ba" id="btn-start">▶ INIZIA TURNO</button>
+      </div>
+      <div style="margin-top:12px;color:var(--dim);font-size:10px;line-height:1.9">
+        <b style="color:var(--amber)">WASD</b> Muovi &nbsp; <b style="color:var(--amber)">E/SPC</b> Azione &nbsp; <b style="color:var(--amber)">SHIFT</b> Corri<br>
+        <b style="color:var(--amber)">F</b> Sirena &nbsp; <b style="color:var(--amber)">H</b> Clacson &nbsp; <b style="color:var(--amber)">G</b> Scendi/Sali &nbsp; <b style="color:var(--amber)">J</b> Pugno
+      </div>
+    </div>
+
+    <!-- MISSION COMPLETE -->
+    <div class="ov off" id="ov-win">
+      <h2 class="h-green">✅ MISSIONE COMPLETATA!</h2>
+      <p id="win-arrival"></p>
+      <div style="font-family:var(--comic);font-size:clamp(22px,5vw,36px);color:var(--amber);margin:8px 0" id="win-time"></div>
+      <div id="win-pts" style="font-size:14px;color:var(--white);margin-bottom:8px"></div>
+      <div class="lb-wrap">
+        <table class="lb"><thead><tr><th>#</th><th>Nome</th><th>Tempo</th><th>Punti</th><th>Lv</th></tr></thead><tbody id="lb-win"></tbody></table>
+      </div>
+      <p id="win-next" style="color:var(--amber);margin-top:8px;font-size:13px"></p>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="ov off" id="ov-over">
+      <h2 class="h-red">💀 GAME OVER</h2>
+      <div style="font-family:var(--comic);font-size:clamp(14px,3vw,20px);color:var(--amber);margin:6px 0;max-width:440px" id="go-insult"></div>
+      <div id="go-stats" style="font-size:13px;color:var(--white);margin:10px 0;line-height:2"></div>
+      <p style="color:var(--amber)">Salva in classifica:</p>
+      <input class="inp" id="go-name" maxlength="12" placeholder="NOME...">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px">
+        <button class="btn ba" id="btn-save">🏆 SALVA</button>
+        <button class="btn bg" id="btn-again">▶ RIGIOCA</button>
+        <button class="btn br" id="btn-menu">MENU</button>
+      </div>
+      <div class="lb-wrap" style="margin-top:14px">
+        <table class="lb"><thead><tr><th>#</th><th>Nome</th><th>Tempo</th><th>Punti</th><th>Lv</th></tr></thead><tbody id="lb-over"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TOUCH CONTROLS -->
+    <div id="touch">
+      <div id="joy-zone"><div id="joy-base"></div><div id="joy-thumb"></div></div>
+      <button class="tbtn" id="tb-e">E<br>AZIONE</button>
+      <button class="tbtn" id="tb-punch">👊</button>
+      <button class="tbtn" id="tb-siren">🔊</button>
     </div>
   </div>
-
-  <!-- OVERLAY: GAMEOVER (timeout) -->
-  <div class="overlay red" id="overlay-gameover" style="display:none">
-    <h2>⏱ TEMPO SCADUTO!</h2>
-    <p>L'ambulanza non è arrivata in tempo.</p>
-    <button class="btn red-btn" id="retry-btn">RIPROVA</button>
+  <div id="hud">
+    <div id="hud-ic">🏥</div>
+    <div id="hud-msg">Benvenuto al 118. Premi INIZIA TURNO.</div>
+    <div id="hud-keys"><b>WASD</b> Muovi &nbsp; <b>E</b> Azione<br><b>G</b> Sali/Scendi &nbsp; <b>J</b> Pugno</div>
   </div>
 </div>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  118 SAN MARINO — TURNO DI GUARDIA  (full engine)
+// ══════════════════════════════════════════════════════════════
+const FB_CFG={apiKey:"AIzaSyAMX2ycf_6P3AcBvarVX4XNKbdposkuqgE",authDomain:"area-personale-autsocc-118-rsm.firebaseapp.com",projectId:"area-personale-autsocc-118-rsm"};
 
-<!-- HUD -->
-<div id="hud">
-  <div id="mission-icon">📡</div>
-  <div id="dialogue">Inserisci il nome e premi INIZIA TURNO.</div>
-  <div id="controls-hint">
-    <strong>W/S</strong> Avanti/Indietro &nbsp; <strong>A/D</strong> Sterza<br>
-    <strong>SPAZIO</strong> Interagisci/Sali
-  </div>
-</div>
+// ── DATA ─────────────────────────────────────────────────────
+const MEDICI=['Mussoni','Manuzzi','Casali','Amelio','Bianchini','Pedrazzi','Ciacci','Isola'];
+const PRIMARIO={nome:'Valentino',ruolo:'PRIMARIO',col:'#8b0000',icon:'👨‍⚕️'};
+const CAPOSALA={nome:'Frisoni',ruolo:'CAPOSALA',col:'#6b0070',icon:'👩‍⚕️'};
+const INF_NOMI=['Angelini S.','Bedetti M.','Canti A.','Capicchioni L.','Castellani G.','Casadei M.','Chiaruzzi E.','Gatti G.','Giancecchi D.','Gozi F.','Lepri A.','Macherozzi L.','Mini S.','Morganti F.','Mosca M.','Mosconi M.','Pacelli L.','Palumbo S.','Podeschi F.','Sharov S.','Tiburzi S.','Ticchi F.','Tini C.'];
+const AUTISTI_NOMI=['Barbieri M.','Berardi P.','Bianchi S.','Fabbri N.','Ghiotti G.','Michelotti Y.','Pazzaglia S.','Sarti M.','Volpini F.'];
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// ─────────────────────────────────────────────
-//   FIREBASE CONFIG — sostituisci con i tuoi
-// ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey:            "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain:        "tuo-progetto.firebaseapp.com",
-  projectId:         "tuo-progetto",
-  storageBucket:     "tuo-progetto.appspot.com",
-  messagingSenderId: "000000000000",
-  appId:             "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
-};
-
-let db = null;
-try {
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-} catch(e) { console.warn("Firebase non configurato — leaderboard offline"); }
-
-async function saveScore(name, score, timeMs) {
-  if (!db) return;
-  try {
-    await addDoc(collection(db, "scores_118"), {
-      name: name.toUpperCase().trim(),
-      score,
-      timeMs,
-      ts: serverTimestamp()
-    });
-  } catch(e) { console.warn("Errore salvataggio:", e); }
-}
-
-async function getTopScores() {
-  if (!db) return [];
-  try {
-    const q = query(collection(db, "scores_118"), orderBy("score","desc"), limit(10));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data());
-  } catch(e) { return []; }
-}
-
-// ═══════════════════════════════════════════════
-//   GAME ENGINE
-// ═══════════════════════════════════════════════
-const canvas  = document.getElementById('gameCanvas');
-const ctx     = canvas.getContext('2d');
-const W = canvas.width, H = canvas.height;
-
-const dialogueEl     = document.getElementById('dialogue');
-const liveScoreEl    = document.getElementById('live-score');
-const timerValEl     = document.getElementById('timer-val');
-const timerBarEl     = document.getElementById('timer-bar-inner');
-const stepValEl      = document.getElementById('step-val');
-const proxHint       = document.getElementById('proximity-hint');
-const missionIconEl  = document.getElementById('mission-icon');
-const overlayTitle   = document.getElementById('overlay-title');
-const overlayVictory = document.getElementById('overlay-victory');
-const overlayGameover= document.getElementById('overlay-gameover');
-const lbBody         = document.getElementById('lb-body');
-const victoryScoreEl = document.getElementById('victory-score-text');
-
-// ─── NOMI ───
-const LISTA_AUTISTI    = ["Barbieri Matteo","Berardi Pierluigi","Bianchi Stefano","Fabbri Nicola","Ghiotti Gabriele","Michelotti Yan","Pazzaglia Stefano","Sarti Michele","Volpini Filippo"];
-const LISTA_INFERMIERI = ["Angelini Stefano","Bedetti Matteo","Canti Anna Helena","Capicchioni Laura","Castellani Giorgia","Casadei Marco","Chiaruzzi Eleonora","Gatti Gian Marco","Giancecchi Dario","Gozi Francesco","Lepri Andrea","Macherozzi Lucia","Mini Stefania","Morganti Flavio","Mosca Maria Pia","Mosconi Matteo","Pacelli Ludovica","Palumbo Stefano","Podeschi Federico","Sharov Savva","Tiburzi Sara","Ticchi Federica","Tini Clelia"];
-
-function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
-
-// ─── STATO GLOBALE ───
-let playerName = "AAA";
-let gameRunning = false;
-let gameOver    = false;
-let won         = false;
-let frame       = 0;
-let score       = 0;
-let startTime   = 0;
-let MISSION_TIME_MS = 120000; // 2 minuti
-
-// ─── CONTROLLI ───
-const keys = {};
-let prevSpace = false;
-window.addEventListener('keydown', e => {
-  keys[e.code] = true;
-  if (e.code === 'Space') e.preventDefault();
-});
-window.addEventListener('keyup', e => { keys[e.code] = false; });
-
-// ─── ISOMETRIA ───
-// mappa tile → screen
-function iso(tx, ty) {
-  return {
-    sx: (tx - ty) * 32 + W/2,
-    sy: (tx + ty) * 16 + 60
-  };
-}
-
-// ─── MAPPA LAYOUT (coordinate MONDO) ───
-// Layout mondo: 0,0 in alto a sx
-// Pixel world: 1 unit = 32px
-// Struttura: parcheggio a sinistra, edificio a destra
-
-// Dimensioni mappa in unità mondo
-const MAP = {
-  // Parcheggio: x: 0..8, y: 0..14
-  // Edificio:   x: 9..18, y: 0..14
-  parkMinX: 0, parkMaxX: 8,
-  bldMinX: 9,  bldMaxX: 18,
-  mapMinY: 0,  mapMaxY: 14
-};
-
-// ─── CONVERSIONE MONDO ↔ SCREEN (top-down isometrico) ───
-// World: x aumenta verso destra, y aumenta verso il basso
-function worldToScreen(wx, wy) {
-  // Asse isometrica: x→ destra, y→ profondità
-  const tileW = 64, tileH = 32;
-  const originX = W * 0.28, originY = 80;
-  return {
-    sx: originX + (wx - wy) * (tileW/2),
-    sy: originY + (wx + wy) * (tileH/2)
-  };
-}
-
-// ─── RENDERING TILES ───
-function drawTile(wx, wy, topColor, sideRColor, sideFColor, h=0) {
-  const TW = 64, TH = 32;
-  const {sx, sy} = worldToScreen(wx, wy);
-  const ex = sx + TW/2, ey = sy - h*TH;
-  const lx = sx - TW/2, ly = sy;
-  const rx = sx,       ry = sy - TH/2;
-
-  // Faccia superiore
-  ctx.beginPath();
-  ctx.moveTo(sx, ey - TH/2);
-  ctx.lineTo(ex, ey);
-  ctx.lineTo(sx, ey + TH/2);
-  ctx.lineTo(sx - TW/2, ey);
-  ctx.closePath();
-  ctx.fillStyle = topColor;
-  ctx.fill();
-
-  if (h > 0) {
-    // Faccia destra
-    ctx.beginPath();
-    ctx.moveTo(sx, ey + TH/2);
-    ctx.lineTo(ex, ey);
-    ctx.lineTo(ex, sy);
-    ctx.lineTo(sx, sy + TH/2);
-    ctx.closePath();
-    ctx.fillStyle = sideRColor;
-    ctx.fill();
-    // Faccia sinistra
-    ctx.beginPath();
-    ctx.moveTo(sx, ey + TH/2);
-    ctx.lineTo(sx - TW/2, ey);
-    ctx.lineTo(sx - TW/2, sy);
-    ctx.lineTo(sx, sy + TH/2);
-    ctx.closePath();
-    ctx.fillStyle = sideFColor;
-    ctx.fill();
-  }
-}
-
-// ─── COSTANTI DI POSIZIONE MONDO ───
-// Parcheggio (y da 0 a 14, x da 0 a 7)
-// Edificio   (y da 0 a 14, x da 8 a 17)
-
-// Building geometry in world coords
-const BUILDING_X0 = 8.5; // parete est del parcheggio = inizio edificio
-const BUILDING_X1 = 17.5;
-const BUILDING_Y0 = 0.5;
-const BUILDING_Y1 = 13.5;
-
-// Stanze (world x,y range)
-const ROOMS = {
-  centrale: { x0: 8.5, x1: 17.5, y0: 0.5, y1: 4.5,  label:"CENTRALE OPERATIVA", icon:"📡" },
-  amb1:     { x0: 8.5, x1: 17.5, y0: 5,   y1: 9,    label:"AMBULATORIO 1",       icon:"🏥" },
-  amb2:     { x0: 8.5, x1: 17.5, y0: 9.5, y1: 13.5, label:"AMBULATORIO 2",       icon:"🏥" }
-};
-
-// Parking bays
-const PARK_BAYS = [
-  { x: 3, y: 3 },
-  { x: 3, y: 6 },
-  { x: 3, y: 9 }
+const AMB_DANNI=[
+  {nome:'Falco 29',danno:'Ha finito la benzina a 50 metri dal garage.',emoji:'⛽'},
+  {nome:'Falco 30',danno:'Non è stata lavata — l\'autolavaggio automatico si è attivato.',emoji:'🚿'},
+  {nome:'Falco 31',danno:'Il clacson è bloccato e suona da solo "Azzurro" di Celentano.',emoji:'🎵'},
+  {nome:'Falco 32',danno:'Qualcuno ha messo gli sci al posto delle ruote.',emoji:'⛷️'},
 ];
 
-// ─── PERSONAGGI ───
-let npcs = [];
-let ambulances = [];
-let player = {};
-let target = {};
-
-const BROKEN_MESSAGES = [
-  "La Falco 29 ha il defibrillatore scarico! Prendi un'altra!",
-  "La Falco 30 ha una ruota a terra! Prendi un'altra!"
+const DIALOGO_TELEFONO=[
+  {chi:'📞 UTENTE',testo:'Pronto?! È un\'emergenza! Mia nonna ha starnutito e non si è ancora scusata!',scelte:['Codice VERDE — invio ambulanza','Codice BIANCO — le chieda scusa lei','Riattacco e faccio finta di niente']},
+  {chi:'📞 UTENTE',testo:'Buonasera, ho bisogno di un\'ambulanza urgente. Ho finito il Parmigiano sul risotto.',scelte:['Codice ROSSO — emergenza gastronomica','Codice GIALLO — mandi il marito al super','Invio psichiatra invece dell\'ambulanza']},
+  {chi:'📞 UTENTE',testo:'Sono bloccato in ascensore da 10 minuti! È un dramma! Ho anche il telefono al 4%!',scelte:['Codice ARANCIONE — rischio blackout','Codice VERDE — chiami i pompieri','Gli dico di mettere il telefono in aereo']},
+  {chi:'📞 UTENTE',testo:'Mio marito si è addormentato sul divano con la partita a volume 80. È una violenza!',scelte:['Codice ROSSO — violenza acustica','Codice BIANCO — aspetti il secondo tempo','Invio la polizia invece del 118']},
+  {chi:'📞 UTENTE',testo:'Mi si è bloccata la mandibola mentre mangiavo una mozzarella. Non riesco a chiudere la bocca.',scelte:['Codice GIALLO — trauma masticatorio','Codice VERDE — continui a mangiare','Codice ROSSO — c\'è ancora mozzarella?']},
 ];
 
-function initGame() {
-  frame = 0; score = 0; gameOver = false; won = false; gameRunning = true;
-  startTime = Date.now();
+const ARRIVO_FRASI=[
+  '🎉 Paziente trovato: stava dormendo beatamente.',
+  '🎉 Paziente in piedi che aspettava con il caffè.',
+  '🎉 Paziente: "Ah siete già qui? Non fa più male..."',
+  '🎉 Paziente guarito spontaneamente all\'arrivo dell\'ambulanza.',
+  '🎉 Paziente: "Ho già chiamato il mio medico. Grazie lo stesso!"',
+];
 
-  const autisti    = shuffle(LISTA_AUTISTI).slice(0,2);
-  const infermieri = shuffle(LISTA_INFERMIERI).slice(0,4);
+const INSULTI=[
+  'Menetto che rincorre piccioni era più veloce di te.',
+  'Le 47 pecore alla rotonda di Faetano ti hanno superato.',
+  'Il Primario Valentino ha già firmato il tuo foglio di espulsione.',
+  'La Caposala Frisoni è delusa. Di nuovo.',
+  'Sei arrivato dopo la guarigione spontanea del paziente.',
+];
 
-  // NPCs
-  npcs = [
-    // Centrale: 2 autisti
-    { name: autisti[0],    role:'Autista',    wx: 11, wy: 2,  color:'#1565c0', kind:'autista' },
-    { name: autisti[1],    role:'Autista',    wx: 14, wy: 3,  color:'#1565c0', kind:'autista' },
-    // Ambulatorio 1: 2 infermieri
-    { name: infermieri[0], role:'Infermiere', wx: 11, wy: 6,  color:'#2e7d32', kind:'infermiere', roomKey:'amb1' },
-    { name: infermieri[1], role:'Infermiere', wx: 14, wy: 7,  color:'#2e7d32', kind:'infermiere', roomKey:'amb1' },
-    // Ambulatorio 2: 2 infermieri
-    { name: infermieri[2], role:'Infermiere', wx: 11, wy: 10, color:'#2e7d32', kind:'infermiere', roomKey:'amb2' },
-    { name: infermieri[3], role:'Infermiere', wx: 14, wy: 11, color:'#2e7d32', kind:'infermiere', roomKey:'amb2' }
-  ];
+const PAZZO_FRASI=['AAAARGH!','Sei uno di loro!','Il governo ci controlla!','Dammi le chiavi!','LIBERTÀÀÀÀ!','La luna mi ha detto di farlo!','Sei una simulazione!'];
 
-  // Ambulanze
-  ambulances = [
-    { id:'Falco 29', wx: PARK_BAYS[0].x, wy: PARK_BAYS[0].y, angle:0, speed:0, broken: BROKEN_MESSAGES[0] },
-    { id:'Falco 30', wx: PARK_BAYS[1].x, wy: PARK_BAYS[1].y, angle:0, speed:0, broken: BROKEN_MESSAGES[1] },
-    { id:'Falco 31', wx: PARK_BAYS[2].x, wy: PARK_BAYS[2].y, angle:0, speed:0, broken: false }
-  ];
+// ── ISO CONSTANTS ──────────────────────────────────────────────
+const ISO={TW:80,TH:40};
+let ISO_OX=0,ISO_OY=0;
+function isoXY(wx,wy,wz=0){return{sx:ISO_OX+(wx-wy)*(ISO.TW/2),sy:ISO_OY+(wx+wy)*(ISO.TH/2)-wz*ISO.TH*.88};}
+function recalcISO(){ISO_OX=VW*.4;ISO_OY=VH*.10;}
 
-  // Player — parte nell'area parcheggio
-  player = {
-    wx: 5, wy: 11,
-    angle: 0, speed: 0,
-    maxSpeedFoot: 0.08,
-    r: 0.3,
-    inVehicle: false,
-    vehicle: null
+// ── CITY TOP-DOWN CONSTANTS ────────────────────────────────────
+const CTS=56;
+const CMW=58,CMH=44;
+const CT={R:0,B:1,G:2,S:3,P:4};
+function buildCity(){
+  const m=[];for(let y=0;y<CMH;y++){m[y]=[];for(let x=0;x<CMW;x++)m[y][x]=CT.B;}
+  const hr=[3,7,12,16,20,24,28,32,36,40];
+  const vr=[3,7,12,17,22,27,32,37,42,48,53];
+  for(const r of hr)for(let x=0;x<CMW;x++){m[r][x]=CT.R;if(r+1<CMH)m[r+1][x]=CT.R;}
+  for(const c of vr)for(let y=0;y<CMH;y++){m[y][c]=CT.R;if(c+1<CMW)m[y][c+1]=CT.R;}
+  for(let y=0;y<CMH;y++)for(let x=0;x<CMW;x++)if(m[y][x]===CT.B){let a=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(m[ny]&&m[ny][nx]===CT.R)a=true;}if(a)m[y][x]=CT.S;}
+  [[0,0,3,3],[55,0,3,3],[0,41,3,3],[55,41,3,3]].forEach(([x,y,w,h])=>{for(let dy=0;dy<h;dy++)for(let dx=0;dx<w;dx++)if(m[y+dy]&&m[y+dy][x+dx]===CT.B)m[y+dy][x+dx]=CT.G;});
+  for(let y=38;y<CMH;y++)for(let x=24;x<34;x++)m[y][x]=CT.P;
+  for(let x=0;x<CMW;x++){m[36][x]=CT.R;m[37][x]=CT.R;}
+  return m;
+}
+const CMAP=buildCity();
+const CITY_LABELS=[
+  {tx:10,ty:5,name:'CITTÀ'},{tx:24,ty:14,name:'BORGO MAGGIORE'},
+  {tx:42,ty:8,name:'SERRAVALLE'},{tx:48,ty:18,name:'DOGANA'},
+  {tx:30,ty:12,name:'DOMAGNANO'},{tx:46,ty:30,name:'FAETANO'},
+  {tx:8,ty:18,name:'ACQUAVIVA'},{tx:8,ty:30,name:'CHIESANUOVA'},
+  {tx:29,ty:39,name:'OSPEDALE 118'},
+];
+
+const MISSIONS_DEF=[
+  {id:'unghia',luogo:'Serravalle',tx:42,ty:8,punti:500,tempo:90,emoji:'💅'},
+  {id:'funivia',luogo:'Borgo Maggiore',tx:24,ty:14,punti:700,tempo:110,emoji:'🚡'},
+  {id:'napoleone',luogo:'Dogana',tx:48,ty:18,punti:1200,tempo:150,emoji:'👑'},
+  {id:'piadina',luogo:'Città',tx:10,ty:5,punti:400,tempo:75,emoji:'🫓'},
+  {id:'pecore',luogo:'Faetano',tx:46,ty:30,punti:1500,tempo:180,emoji:'🐑'},
+  {id:'occhiali',luogo:'Domagnano',tx:30,ty:12,punti:350,tempo:90,emoji:'👓'},
+  {id:'escursionista',luogo:'Acquaviva',tx:8,ty:18,punti:600,tempo:100,emoji:'🥾'},
+  {id:'selfie',luogo:'Città',tx:14,ty:7,punti:550,tempo:80,emoji:'📸'},
+];
+
+// ── CANVAS ─────────────────────────────────────────────────────
+const cv=document.getElementById('gc');
+const cx=cv.getContext('2d');
+const mc=document.getElementById('mmc');
+const mcx=mc.getContext('2d');
+let VW,VH;
+function resizeCanvas(){const s=document.getElementById('stage');VW=cv.width=s.clientWidth;VH=cv.height=s.clientHeight;mc.width=120;mc.height=96;recalcISO();}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+// ── AUDIO ───────────────────────────────────────────────────────
+let AC;
+function aInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+function beep(f,d,t='square',v=.24){if(!AC)return;try{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function wham(d=.3,v=.45){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate);const da=b.getChannelData(0);for(let i=0;i<da.length;i++)da[i]=Math.random()*2-1;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);s.start();}
+const sPhone=()=>[0,380,760].forEach(t=>setTimeout(()=>{beep(880,.08,'square',.4);setTimeout(()=>beep(660,.08,'square',.4),120);},t));
+const sJingle=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>setTimeout(()=>beep(f,.13,'square',.28),i*90));
+const sFail=()=>[440,330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,.22,'sawtooth',.32),i*130));
+const sHonk=()=>beep(196,.18,'sawtooth',.42);
+const sCrash=()=>{wham(.28,.5);beep(100,.3,'sawtooth',.38);};
+const sPunch=()=>{beep(220,.04,'square',.5);setTimeout(()=>beep(110,.1,'sawtooth',.4),40);};
+const sStart=()=>[262,330,392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.09,'sawtooth',.2),i*65));
+const sPick=()=>{beep(440,.06,'square',.3);setTimeout(()=>beep(880,.1,'square',.28),75);};
+
+// ── UTILS ───────────────────────────────────────────────────────
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const d2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+function tileWalkable(tx,ty){if(tx<0||ty<0||tx>=CMW||ty>=CMH)return false;const t=CMAP[ty][tx];return t===CT.R||t===CT.S||t===CT.P;}
+
+// ── GAME STATE ──────────────────────────────────────────────────
+let G={};
+let FR=0;
+const KEYS={};
+let prevAction=false;
+
+function rndShuffle(a,n){return shuffle(a).slice(0,n);}
+
+function newGame(playerName){
+  aInit();
+  const mediciShuffle=shuffle(MEDICI);
+  const infShuffle=shuffle(INF_NOMI);
+  const autShuffle=shuffle(AUTISTI_NOMI);
+  // pick ambulanza ok (index 0), others damaged
+  const ambOkIdx=0;
+
+  G={
+    name:(playerName||'ANONIMO').toUpperCase().trim().slice(0,12),
+    score:0, combo:0, level:1, mDone:0,
+
+    // hospital scene state
+    scene:'hospital', // hospital | phone | city | win | over
+    hStep:0,
+    // 0: go to centrale
+    // 1: phone ringing, pick up
+    // 2: phone done, find doctor
+    // 3: got doctor, find nurse
+    // 4: got nurse, find ambulance
+    // 5: in city
+
+    // hospital staff
+    amb1Med:mediciShuffle[0], amb2Med:mediciShuffle[1],
+    amb1Inf:[infShuffle[0],infShuffle[1]],
+    amb2Inf:[infShuffle[2],infShuffle[3]],
+    kitchenStaff:[autShuffle[0],infShuffle[4],infShuffle[5]],
+    centraleAut:[autShuffle[1],autShuffle[2]],
+    targetNurse:infShuffle[6],
+
+    // doctor hiding spot (random room key)
+    doctorRoom:rnd(['kitchen','amb2','outside']),
+    doctorFound:false,
+    nurseFound:false,
+
+    // ambulances
+    ambulances:[
+      {id:'Falco 31',wx:2,wy:3,ok:true,danno:null},
+      {id:'Falco 29',wx:2,wy:6,ok:false,...AMB_DANNI[0]},
+      {id:'Falco 30',wx:2,wy:9,ok:false,...AMB_DANNI[1]},
+    ],
+
+    // hospital player
+    hp:{wx:3,wy:11,vx:0,vy:0,anim:0,angle:0},
+
+    // phone dialog
+    phoneScript:null, phoneStep:0, phonePending:false,
+
+    // city
+    mission:null, mIdx:-1,
+    // vehicle
+    car:{x:0,y:0,a:-Math.PI/2,spd:0,siren:false,sirenTick:0},
+    onFoot:false,  // false=in vehicle, true=on foot in city
+    footC:{x:0,y:0,a:0,vx:0,vy:0,anim:0},
+    crew:[],       // crew following player on foot
+    // city npcs
+    cityNPCs:[],
+    // drive timer
+    driveStart:0,
+    crashCd:0,
+    punchCd:0,
+    evtT:8,
+
+    // input
+    jx:0,jy:0,jActive:false,jId:null,
+
+    last:performance.now(),
   };
 
-  // Target emergenza (angolo parcheggio lontano)
-  target = { wx: 1, wy: 1.5, active: false };
-
-  missionStep = 0;
-  updateMissionUI();
+  nextMission();
+  hideBubbles();
+  showOv(null);
+  setHud('Vai alla CENTRALE OPERATIVA — segui la freccia 📡','🏥');
+  setPhase('OSPEDALE');
+  document.getElementById('drv-hud').classList.remove('show');
+  document.getElementById('minimap').classList.remove('show');
+  document.getElementById('touch').className=('ontouchstart' in window)?'show':'';
+  updateScoreUI();
+  spawnHospBubbles();
 }
 
-let missionStep = 0;
-
-const MISSION_STEPS = [
-  { icon:'📡', text: 'MISSIONE 1/4 — Vai in Centrale Operativa (edificio in alto).' },
-  { icon:'🏥', text: 'MISSIONE 2/4 — Vai in Ambulatorio 1 a raccogliere l\'infermiere.' },
-  { icon:'🚑', text: 'MISSIONE 3/4 — Torna al parcheggio e sali sulla Falco 31 [SPAZIO].' },
-  { icon:'🆘', text: 'MISSIONE 4/4 — Raggiungi il punto emergenza! (cerchio rosso in parcheggio)' }
-];
-
-function updateMissionUI() {
-  const s = MISSION_STEPS[missionStep] || MISSION_STEPS[0];
-  missionIconEl.textContent = s.icon;
-  stepValEl.textContent = missionStep + 1;
+function nextMission(){
+  G.mIdx=(G.mIdx+1)%MISSIONS_DEF.length;
+  G.mission=MISSIONS_DEF[G.mIdx];
 }
 
-function msg(text) { dialogueEl.textContent = '>>> ' + text; }
+// ── HUD ─────────────────────────────────────────────────────────
+function setHud(msg,ic='🏥'){document.getElementById('hud-msg').textContent='▶ '+msg;document.getElementById('hud-ic').textContent=ic;}
+function setPhase(p){document.getElementById('hdr-title').lastChild.data='';}  // not used
+function showOv(id){document.querySelectorAll('.ov').forEach(e=>e.classList.add('off'));if(id)document.getElementById(id).classList.remove('off');}
+function updateScoreUI(){
+  document.getElementById('score-v').textContent=G.score.toLocaleString();
+  document.getElementById('level-el').textContent='LV '+G.level;
+  const cb=document.getElementById('combo-el');
+  if(G.combo>1){cb.style.display='block';cb.textContent='COMBO x'+G.combo;}else cb.style.display='none';
+}
+let toastTm;
+function toast(msg,cls='',dur=2800){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+cls;clearTimeout(toastTm);toastTm=setTimeout(()=>el.className='',dur);}
 
-// ─── FISICA PLAYER A PIEDI ───
-function moveFoot() {
-  let ax = 0, ay = 0;
-  const sp = 0.09;
-  if (keys['KeyW'] || keys['ArrowUp'])    ay -= sp;
-  if (keys['KeyS'] || keys['ArrowDown'])  ay += sp;
-  if (keys['KeyA'] || keys['ArrowLeft'])  ax -= sp;
-  if (keys['KeyD'] || keys['ArrowRight']) ax += sp;
+// ── SPEECH BUBBLES ───────────────────────────────────────────────
+let bubbleTm={};
+function showBubble(id,x,y,text,cls='',dur=3500){
+  let el=document.getElementById('b_'+id);
+  if(!el){el=document.createElement('div');el.className='bubble';el.id='b_'+id;document.getElementById('bubbles').appendChild(el);}
+  el.className='bubble '+(cls||'');el.textContent=text;
+  el.style.left=x+'px';el.style.top=y+'px';el.style.display='block';
+  clearTimeout(bubbleTm[id]);
+  bubbleTm[id]=setTimeout(()=>{el.style.display='none';},dur);
+}
+function hideBubbles(){document.getElementById('bubbles').innerHTML='';}
 
-  // Normalizza diagonali
-  if (ax !== 0 && ay !== 0) { ax *= 0.707; ay *= 0.707; }
+// Periodic ambient bubbles in hospital
+const KITCHEN_LINES=['Chi ha preso il mio panino?!','OGGI FINISCO ALLE 7!!','Non ci sono abbastanza letti!','Valentino mi ha fatto un\'altra nota!','Ordine 10 anni fa, ancora aspetto!','Frisoni mi ha guardato male. ANCORA.'];
+const AMB1_LINES=['Dottore, il paziente al letto 3...','Ho fatto il doppio turno','La macchina del caffè è rotta','Mancano i guanti ANCORA'];
+const PRIM_LINES=['VERGOGNA! Tutti in ordine!','Chi ha lasciato il bagno così?!','INEFFICIENTI! Tutti!','Riunione domani mattina alle 6!'];
+const CAPO_LINES=['Attività 3 è non compilata!','Chi manca alla firma?!','Il protocollo! IL PROTOCOLLO!','Dio mio, sono circondata da...'];
 
-  let nwx = player.wx + ax;
-  let nwy = player.wy + ay;
-
-  // Confini mappa
-  nwx = Math.max(0.3, Math.min(17.2, nwx));
-  nwy = Math.max(0.3, Math.min(13.2, nwy));
-
-  // Parete edificio/parcheggio
-  const WALL_X = 7.8;
-  // Porte nelle pareti (centri stanze)
-  const DOOR_YS = [2.5, 7, 11]; // y-centro delle 3 stanze
-  const DOOR_W  = 1.2;
-
-  let blocked = false;
-  if ((player.wx < WALL_X && nwx > WALL_X) || (player.wx > WALL_X && nwx < WALL_X)) {
-    // Attraverso la parete — controlla se è vicino a una porta
-    const nearDoor = DOOR_YS.some(dy => Math.abs(nwy - dy) < DOOR_W);
-    if (!nearDoor) blocked = true;
-  }
-
-  if (!blocked) { player.wx = nwx; player.wy = nwy; }
+let ambientBubbleTm;
+function spawnHospBubbles(){
+  clearInterval(ambientBubbleTm);
+  ambientBubbleTm=setInterval(()=>{
+    if(G.scene!=='hospital'&&G.scene!=='phone')return;
+    recalcISO();
+    // kitchen bubble
+    const k=isoXY(10,11);showBubble('kitchen',clamp(k.sx-80,5,VW-210),clamp(k.sy-80,5,VH-60),rnd(KITCHEN_LINES),'red-b',3200);
+    // primario
+    const p=isoXY(9,1);showBubble('prim',clamp(p.sx-40,5,VW-210),clamp(p.sy-60,5,VH-60),rnd(PRIM_LINES),'red-b',2800);
+    // caposala
+    const cs=isoXY(12,5);showBubble('capo',clamp(cs.sx-40,5,VW-210),clamp(cs.sy-60,5,VH-60),rnd(CAPO_LINES),'red-b',2800);
+    // amb1
+    const a1=isoXY(11,5);showBubble('amb1',clamp(a1.sx+10,5,VW-210),clamp(a1.sy-50,5,VH-60),rnd(AMB1_LINES),'blue-b',2500);
+  },4000);
 }
 
-// ─── FISICA AMBULANZA ───
-function moveVehicle() {
-  const v = player.vehicle;
-  const ACC   = 0.006;
-  const BRAKE = 0.004;
-  const FRIC  = 0.96;
-  const STEER = 0.045;
-  const MAX_S = 0.18;
+// ── PHONE DIALOG SYSTEM ─────────────────────────────────────────
+let phoneLines=[];
+let phoneLineIdx=0;
+let phoneCb=null;
 
-  if (keys['KeyW'] || keys['ArrowUp'])   v.speed = Math.min(v.speed + ACC, MAX_S);
-  if (keys['KeyS'] || keys['ArrowDown']) v.speed = Math.max(v.speed - BRAKE, -MAX_S * 0.5);
-  if (Math.abs(v.speed) > 0.001 && !keys['KeyW'] && !keys['KeyS'] && !keys['ArrowUp'] && !keys['ArrowDown']) {
-    v.speed *= FRIC;
-  }
-  if (Math.abs(v.speed) < 0.0005) v.speed = 0;
-
-  if (Math.abs(v.speed) > 0.005) {
-    const dir = v.speed > 0 ? 1 : -1;
-    if (keys['KeyA'] || keys['ArrowLeft'])  v.angle -= STEER * dir;
-    if (keys['KeyD'] || keys['ArrowRight']) v.angle += STEER * dir;
-  }
-
-  // Movimento in coordinate isometriche
-  // angle 0 = verso +x (est)
-  let nwx = v.wx + Math.cos(v.angle) * v.speed;
-  let nwy = v.wy + Math.sin(v.angle) * v.speed;
-
-  // Confini parcheggio
-  nwx = Math.max(0.5, Math.min(7.2, nwx));
-  nwy = Math.max(0.5, Math.min(13.0, nwy));
-
-  v.wx = nwx; v.wy = nwy;
-  player.wx = nwx; player.wy = nwy;
+function openPhone(lines,cb){
+  phoneLines=lines;phoneLineIdx=0;phoneCb=cb;
+  const m=document.getElementById('phone-modal');
+  m.classList.add('show');
+  showPhoneLine();
 }
-
-// ─── DISTANZA MONDO ───
-function wdist(a, b) { return Math.sqrt((a.wx-b.wx)**2 + (a.wy-b.wy)**2); }
-
-// ─── UPDATE ───
-function update() {
-  if (!gameRunning || gameOver || won) return;
-  frame++;
-
-  const elapsed = Date.now() - startTime;
-  const remaining = Math.max(0, MISSION_TIME_MS - elapsed);
-  const ratio = remaining / MISSION_TIME_MS;
-
-  // Timer UI
-  const sec = Math.floor(remaining / 1000);
-  const mm = String(Math.floor(sec/60)).padStart(2,'0');
-  const ss = String(sec % 60).padStart(2,'0');
-  timerValEl.textContent = `${mm}:${ss}`;
-  timerBarEl.style.width = (ratio * 100) + '%';
-  timerBarEl.style.background = ratio > 0.4
-    ? 'linear-gradient(90deg,#00e676,#ffc400)'
-    : 'linear-gradient(90deg,#ff1744,#ff6d00)';
-
-  if (remaining <= 0 && missionStep < 3) { triggerGameOver(); return; }
-
-  // Score passivo (sopravvivenza)
-  if (frame % 60 === 0 && missionStep > 0) score += 10;
-  liveScoreEl.textContent = score;
-
-  const spaceNow = keys['Space'];
-  const spaceTap = spaceNow && !prevSpace;
-  prevSpace = spaceNow;
-
-  // ─── MOVIMENTO ───
-  if (player.inVehicle) {
-    moveVehicle();
-  } else {
-    moveFoot();
-  }
-
-  // ─── LOGICA MISSIONI ───
-  const inBuilding = player.wx > 8;
-  const wy = player.wy;
-
-  // Proximity hint
-  let showHint = false;
-  if (!player.inVehicle && missionStep === 2) {
-    for (const amb of ambulances) {
-      if (wdist(player, amb) < 1.5) { showHint = true; break; }
-    }
-  }
-  proxHint.classList.toggle('visible', showHint);
-
-  // Step 0 → 1: entra in Centrale
-  if (missionStep === 0 && inBuilding && wy < 4.5) {
-    const n0 = npcs[0], n1 = npcs[1];
-    msg(`${n0.name}: "Emergenza Codice Rosso! Accompagna l'infermiere ${npcs[2].name} in Ambulatorio 1!"`);
-    missionStep = 1;
-    score += 200;
-    updateMissionUI();
-  }
-
-  // Step 1 → 2: entra in Ambulatorio 1
-  if (missionStep === 1 && inBuilding && wy >= 4.5 && wy < 9) {
-    msg(`${npcs[2].name}: "Pronto! Vai al parcheggio, prendi la Falco 31 — le altre due hanno problemi!"`);
-    missionStep = 2;
-    score += 300;
-    updateMissionUI();
-  }
-
-  // Step 2 → 3: sali in ambulanza
-  if (missionStep === 2 && spaceTap && !player.inVehicle) {
-    for (const amb of ambulances) {
-      if (wdist(player, amb) < 1.5) {
-        if (amb.broken) {
-          msg(amb.broken);
-        } else {
-          msg('Falco 31 in moto! Sirene accese — raggiungi il punto emergenza!');
-          player.inVehicle = true;
-          player.vehicle   = amb;
-          amb.angle        = -Math.PI * 0.5; // punta verso l'alto
-          amb.speed        = 0;
-          missionStep      = 3;
-          target.active    = true;
-          score           += 400;
-          updateMissionUI();
-        }
-        break;
+function showPhoneLine(){
+  const ln=phoneLines[phoneLineIdx];
+  document.getElementById('phone-who').textContent=ln.chi||'';
+  let txt=ln.testo||'';
+  let typed='';
+  document.getElementById('phone-txt').textContent='';
+  document.getElementById('phone-choices').innerHTML='';
+  document.getElementById('phone-next').style.display=ln.scelte?'none':'block';
+  // typewriter
+  clearInterval(G._phoneTm);
+  G._phoneTm=setInterval(()=>{
+    if(typed.length>=txt.length){clearInterval(G._phoneTm);
+      if(ln.scelte){
+        const ch=document.getElementById('phone-choices');
+        ln.scelte.forEach((s,i)=>{
+          const b=document.createElement('button');b.className='pchoice';
+          b.textContent=(i===0?'A':i===1?'B':'C')+') '+s;
+          b.addEventListener('click',()=>phoneChoose(i,ln.scelte.length));
+          ch.appendChild(b);
+        });
       }
+      return;}
+    typed+=txt[typed.length];
+    document.getElementById('phone-txt').textContent=typed;
+    if(typed.length%3===0)beep(600+Math.random()*300,.016,'square',.03);
+  },22);
+}
+function phoneChoose(idx,total){
+  // score based on choice: first = most serious, last = most absurd (bonus)
+  const bonus=idx===total-1?150:idx===0?50:100;
+  G.score+=bonus;updateScoreUI();
+  toast(idx===total-1?'😂 Risposta EPICA! +150 pt':idx===0?'✅ Risposta corretta +50 pt':'👍 Risposta decente +100 pt',idx===total-1?'green':'',2000);
+  phoneLines[phoneLineIdx]=Object.assign({},phoneLines[phoneLineIdx]);
+  delete phoneLines[phoneLineIdx].scelte;
+  phoneLines.splice(phoneLineIdx+1,0,{chi:'📻 TU',testo:phoneLines[phoneLineIdx].scelte?.[idx]||'Ok, mando l\'ambulanza.'});
+  advancePhone();
+}
+function advancePhone(){
+  // if still typing, complete
+  clearInterval(G._phoneTm);
+  const ln=phoneLines[phoneLineIdx];
+  if(ln&&ln.scelte){return;} // wait for choice
+  phoneLineIdx++;
+  if(phoneLineIdx>=phoneLines.length){
+    document.getElementById('phone-modal').classList.remove('show');
+    if(phoneCb){const cb=phoneCb;phoneCb=null;cb();}
+    return;
+  }
+  showPhoneLine();
+}
+document.getElementById('phone-next').addEventListener('click',advancePhone);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('phone-modal').classList.contains('show'))advancePhone();});
+
+// ── HOSPITAL PHYSICS ────────────────────────────────────────────
+const HWALLX=7.6;
+const HDOORS=[2,6.2,10.2];
+const HDOOR_W=1.25;
+function hospMove(dt){
+  const p=G.hp;
+  let ax=0,ay=0;
+  const sp=(KEYS['ShiftLeft']||KEYS['ShiftRight'])?0.13:0.07;
+  if(KEYS['KeyW']||KEYS['ArrowUp'])   ay-=sp;
+  if(KEYS['KeyS']||KEYS['ArrowDown']) ay+=sp;
+  if(KEYS['KeyA']||KEYS['ArrowLeft']) ax-=sp;
+  if(KEYS['KeyD']||KEYS['ArrowRight'])ax+=sp;
+  if(G.jActive){ax=G.jx*sp*1.4;ay=G.jy*sp*1.4;}
+  if(ax&&ay){ax*=.707;ay*=.707;}
+  if(ax||ay){p.anim+=0.22;p.angle=Math.atan2(ay,ax);}
+  let nx=clamp(p.wx+ax,0.3,17.4),ny=clamp(p.wy+ay,0.3,13.3);
+  const crossW=(p.wx<HWALLX&&nx>=HWALLX)||(p.wx>=HWALLX&&nx<HWALLX);
+  if(crossW){const nd=HDOORS.some(dy=>Math.abs(ny-dy)<HDOOR_W);if(!nd)nx=p.wx;}
+  p.wx=nx;p.wy=ny;
+}
+
+// ── HOSPITAL MISSION LOGIC ──────────────────────────────────────
+function hospUpdate(){
+  const p=G.hp;
+  const inBld=p.wx>=HWALLX;
+  const wy=p.wy;
+  const actionNow=KEYS['KeyE']||KEYS['Space'];
+  const actionTap=actionNow&&!prevAction;
+  prevAction=actionNow;
+  const prEl=document.getElementById('prox');
+
+  // ── STEP 0: go to centrale (x>8, y<4) ──
+  if(G.hStep===0){
+    const nearCentrale=inBld&&wy<4;
+    prEl.textContent=nearCentrale?'[ E ] Entra in Centrale':'📡 Vai in CENTRALE OPERATIVA';
+    prEl.classList.toggle('show',true);
+    if(nearCentrale&&actionTap){
+      G.hStep=1;
+      prEl.classList.remove('show');
+      // phone rings!
+      sPhone();
+      setTimeout(()=>showBubble('ringing',VW/2-50,VH*.3,'📞 DRIIIIN! DRIIIIN!','red-b',4000),500);
+      setHud('SQUILLA IL TELEFONO! Rispondi!','📞');
+      toast('Il telefono in Centrale suona!\nGli autisti dormono — tocca a te!','',3000);
     }
+    return;
   }
 
-  // Step 3: raggiungi il target
-  if (missionStep === 3 && target.active && player.inVehicle) {
-    if (wdist(player.vehicle, target) < 1.2) {
-      triggerVictory(elapsed);
+  // ── STEP 1: answer phone ──
+  if(G.hStep===1){
+    const nearPhone=inBld&&wy<4&&p.wx>8;
+    prEl.textContent=nearPhone?'[ E ] Rispondi al telefono':'📞 Raggiungi il telefono in Centrale';
+    prEl.classList.toggle('show',true);
+    if(nearPhone&&actionTap){
+      G.hStep=2;prEl.classList.remove('show');
+      G.scene='phone';
+      const script=rnd(DIALOGO_TELEFONO);
+      // full phone conversation
+      openPhone([
+        {chi:'📞 LINEA 118',testo:'Pronto, 118 San Marino. Parlo con '+G.name+'?'},
+        {chi:'📻 TU',testo:'Sono io. Dica.'},
+        script,
+        {chi:'📞 LINEA 118',testo:'Perfetto. Inviate l\'ambulanza il prima possibile! È urgente!'},
+        {chi:'📻 TU',testo:'Stiamo arrivando. Codice assegnato. Ciaone.'},
+      ],()=>{
+        G.scene='hospital';
+        G.hStep=2;
+        setHud('Trova il dottore — si è nascosto!','🔍');
+        toast('Il dottore si è nascosto in '+
+          (G.doctorRoom==='kitchen'?'CUCINA':G.doctorRoom==='amb2'?'AMBULATORIO 2':'FUORI')+'!','blue',4000);
+      });
     }
+    return;
   }
 
-  // NPC idle wander (leggero)
-  for (const npc of npcs) {
-    if (frame % 180 === 0) {
-      npc._dx = (Math.random()-0.5)*0.3;
-      npc._dy = (Math.random()-0.5)*0.3;
+  // ── STEP 2: find doctor ──
+  if(G.hStep===2&&!G.doctorFound){
+    const rooms={kitchen:{inBld:p.wx>8.5&&p.wx<16&&wy>9.5,label:'Cucina'},amb2:{inBld:inBld&&wy>=8&&wy<13,label:'Amb 2'},outside:{inBld:p.wx<HWALLX,label:'Parcheggio'}};
+    const here=rooms[G.doctorRoom];
+    const near=here?.inBld;
+    prEl.textContent=near?'[ E ] Trovato il dottore!':('🔍 Cerca il dottore in: '+(here?.label||'?'));
+    prEl.classList.toggle('show',true);
+    if(near&&actionTap){
+      G.doctorFound=true;G.score+=200;updateScoreUI();
+      prEl.classList.remove('show');
+      sPick();
+      const docName=G.amb1Med;
+      showBubble('doc',clamp(VW/2-60,5,VW-200),VH*.35,`Dott. ${docName}:\n"Ero qui a riposare.\nVa bene, vengo..."\n😑`,'green-b',5000);
+      setTimeout(()=>{
+        G.hStep=3;
+        setHud('Ora prendi l\'infermiere '+G.targetNurse+' — è incazzato!','😤');
+        toast('Dottore trovato! Ora cerca l\'infermiere!','green',2500);
+      },1500);
     }
-    if (npc._dx) {
-      npc.wx = Math.max(9, Math.min(17, npc.wx + (npc._dx||0)));
-      npc.wy = Math.max(1, Math.min(13, npc.wy + (npc._dy||0)));
+    return;
+  }
+
+  // ── STEP 3: find angry nurse ──
+  if(G.hStep===3&&!G.nurseFound){
+    // nurse is in amb1 (y 4-8 building)
+    const nearNurse=inBld&&wy>=4&&wy<8;
+    prEl.textContent=nearNurse?'[ E ] Convincere l\'infermiere':'😤 Trova l\'infermiere incazzato in AMBULATORIO 1';
+    prEl.classList.toggle('show',true);
+    if(nearNurse&&actionTap){
+      G.nurseFound=true;G.score+=200;updateScoreUI();
+      prEl.classList.remove('show');
+      sPick();
+      showBubble('inf',clamp(VW/2-60,5,VW-200),VH*.35,`${G.targetNurse}:\n"NON CI VADO!\nHo già fatto\nil doppio turno!"\n😡`,'red-b',4000);
+      setTimeout(()=>{
+        showBubble('inf2',clamp(VW/2-60,5,VW-200),VH*.35,`${G.targetNurse}:\n"...ok ci vengo.\nMa lo scrivo\nnel registro!"\n😤`,'',3000);
+        G.hStep=4;
+        setHud('Vai al PARCHEGGIO e sali sulla Falco 31!','🚑');
+        toast('Equipaggio pronto! Prendi l\'ambulanza giusta!','green',3000);
+      },3500);
     }
-  }
-}
-
-// ─── VITTORIA / GAME OVER ───
-async function triggerVictory(elapsedMs) {
-  won = true; gameRunning = false;
-  const timeSec = Math.floor(elapsedMs / 1000);
-  const timeBonus = Math.max(0, Math.floor((MISSION_TIME_MS - elapsedMs) / 100));
-  score += 1000 + timeBonus;
-  liveScoreEl.textContent = score;
-
-  victoryScoreEl.textContent = `PUNTEGGIO FINALE: ${score} pts`;
-  overlayVictory.style.display = 'flex';
-
-  await saveScore(playerName, score, elapsedMs);
-  const top = await getTopScores();
-  renderLeaderboard(top);
-}
-
-function triggerGameOver() {
-  gameOver = true; gameRunning = false;
-  msg('TEMPO SCADUTO — ambulanza non arrivata in tempo!');
-  overlayGameover.style.display = 'flex';
-}
-
-function renderLeaderboard(scores) {
-  lbBody.innerHTML = '';
-  scores.forEach((s, i) => {
-    const tr = document.createElement('tr');
-    tr.className = `rank-${i+1}${s.name === playerName.toUpperCase() ? ' me':''}`;
-    const mm = Math.floor((s.timeMs||0)/60000);
-    const ss = String(Math.floor(((s.timeMs||0)%60000)/1000)).padStart(2,'0');
-    tr.innerHTML = `<td>${['🥇','🥈','🥉'][i]||'#'+(i+1)}</td><td>${s.name||'???'}</td><td style="text-align:right;color:var(--amber)">${s.score||0}</td><td style="text-align:right;color:var(--dim)">${mm}:${ss}</td>`;
-    lbBody.appendChild(tr);
-  });
-}
-
-// ─── RENDERING ───
-const TILE_W = 64, TILE_H = 32;
-const ISO_OX = W * 0.28, ISO_OY = 80;
-
-function w2s(wx, wy) {
-  return {
-    sx: ISO_OX + (wx - wy) * (TILE_W/2),
-    sy: ISO_OY + (wx + wy) * (TILE_H/2)
-  };
-}
-
-function isoBlock(wx, wy, bw, bh, topClr, rightClr, leftClr, wallH) {
-  // Disegna un blocco isometrico: base bw×bh, altezza wallH
-  // Calcola i 4 angoli del tetto
-  const p00 = w2s(wx,      wy);
-  const p10 = w2s(wx+bw,   wy);
-  const p01 = w2s(wx,      wy+bh);
-  const p11 = w2s(wx+bw,   wy+bh);
-  const dh  = wallH * TILE_H * 0.5; // pixel di altezza
-
-  // Tetto
-  ctx.beginPath();
-  ctx.moveTo(p00.sx, p00.sy - dh);
-  ctx.lineTo(p10.sx, p10.sy - dh);
-  ctx.lineTo(p11.sx, p11.sy - dh);
-  ctx.lineTo(p01.sx, p01.sy - dh);
-  ctx.closePath();
-  ctx.fillStyle = topClr;
-  ctx.fill();
-  // Bordo tetto
-  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-
-  // Faccia destra (sud-est)
-  ctx.beginPath();
-  ctx.moveTo(p10.sx, p10.sy - dh);
-  ctx.lineTo(p11.sx, p11.sy - dh);
-  ctx.lineTo(p11.sx, p11.sy);
-  ctx.lineTo(p10.sx, p10.sy);
-  ctx.closePath();
-  ctx.fillStyle = rightClr;
-  ctx.fill();
-  ctx.stroke();
-
-  // Faccia sinistra (sud-ovest)
-  ctx.beginPath();
-  ctx.moveTo(p01.sx, p01.sy - dh);
-  ctx.lineTo(p11.sx, p11.sy - dh);
-  ctx.lineTo(p11.sx, p11.sy);
-  ctx.lineTo(p01.sx, p01.sy);
-  ctx.closePath();
-  ctx.fillStyle = leftClr;
-  ctx.fill();
-  ctx.stroke();
-}
-
-function isoFloor(wx, wy, bw, bh, clr) {
-  const p00 = w2s(wx,    wy);
-  const p10 = w2s(wx+bw, wy);
-  const p01 = w2s(wx,    wy+bh);
-  const p11 = w2s(wx+bw, wy+bh);
-  ctx.beginPath();
-  ctx.moveTo(p00.sx, p00.sy);
-  ctx.lineTo(p10.sx, p10.sy);
-  ctx.lineTo(p11.sx, p11.sy);
-  ctx.lineTo(p01.sx, p01.sy);
-  ctx.closePath();
-  ctx.fillStyle = clr;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
-}
-
-// ─── DRAW SCENE ───
-function drawScene() {
-  // Cielo / sfondo notturno
-  ctx.fillStyle = '#070d16';
-  ctx.fillRect(0, 0, W, H);
-
-  // ── PARCHEGGIO ──
-  // Asfalto (tiles 0..8, 0..14)
-  for (let tx = 0; tx <= 7; tx++) {
-    for (let ty = 0; ty <= 13; ty++) {
-      const clr = (tx+ty)%2 === 0 ? '#1c2a38' : '#1a2633';
-      isoFloor(tx, ty, 1, 1, clr);
-    }
-  }
-  // Strisce parcheggio
-  for (const bay of PARK_BAYS) {
-    // Linee gialle
-    isoFloor(bay.x - 0.05, bay.y - 0.9, 0.1, 1.8, '#ffc400');
-    isoFloor(bay.x + 0.95, bay.y - 0.9, 0.1, 1.8, '#ffc400');
-    // Testo slot (non su canvas iso facilmente — omettiamo per pulizia visiva)
+    return;
   }
 
-  // ── EDIFICIO OSPEDALE ──
-  // Pavimento interno
-  for (let tx = 8; tx <= 17; tx++) {
-    for (let ty = 0; ty <= 13; ty++) {
-      const clr = (tx+ty)%2 === 0 ? '#e8eaf0' : '#dde0ea';
-      isoFloor(tx, ty, 1, 1, clr);
-    }
-  }
-
-  // Muri perimetrali edificio (H=2)
-  // Muro nord
-  isoBlock(8, -0.5, 10, 0.5, '#b0bec5','#90a4ae','#78909c', 2.2);
-  // Muro ovest (portico con porte)
-  isoBlock(7.5, 0, 0.5, 4.2, '#b0bec5','#90a4ae','#78909c', 2.2); // segmento nord
-  isoBlock(7.5, 4.8, 0.5, 3.4, '#b0bec5','#90a4ae','#78909c', 2.2); // tra porta 1-2
-  isoBlock(7.5, 8.8, 0.5, 3.4, '#b0bec5','#90a4ae','#78909c', 2.2); // tra porta 2-3
-  isoBlock(7.5, 12.8, 0.5, 1.2, '#b0bec5','#90a4ae','#78909c', 2.2); // fondo
-  // Muro est
-  isoBlock(17.5, 0, 0.5, 14, '#b0bec5','#90a4ae','#78909c', 2.2);
-  // Muro sud
-  isoBlock(8, 13.5, 10, 0.5, '#b0bec5','#90a4ae','#78909c', 2.2);
-
-  // ── DIVISORI INTERNI (Centrale / Amb1 / Amb2) ──
-  // Divisore 1 (y=4.5) con porta al centro
-  isoBlock(8, 4.4, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
-  isoBlock(13.5, 4.4, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
-  // Porta divisore 1 (gap 8+4..8+4+1.5)
-  // visivamente il gap è dove non c'è blocco
-  
-  // Divisore 2 (y=9)
-  isoBlock(8, 8.9, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
-  isoBlock(13.5, 8.9, 4, 0.3, '#cfd8dc','#b0bec5','#90a4ae', 1.8);
-
-  // ── PORTE (archi colorati) ──
-  drawDoor(7.5, 4.2);  // porta Centrale
-  drawDoor(7.5, 8.8);  // porta Amb1
-  drawDoor(12, 4.4);   // porta divisore 1
-  drawDoor(12, 8.9);   // porta divisore 2
-
-  // ── ARREDI INTERNI ──
-  // Centrale: scrivania e radio
-  isoBlock(10, 1, 2, 1, '#546e7a','#455a64','#37474f', 0.6);  // scrivania
-  isoBlock(15, 2, 1.5, 1, '#546e7a','#455a64','#37474f', 0.6);
-  drawEquipment(10.5, 0.5, '📻'); // radio
-  drawEquipment(15.5, 1.5, '💻');
-
-  // Amb1: lettino
-  isoBlock(10, 5.5, 2, 1.5, '#ef9a9a','#e57373','#ef9a9a', 0.4);
-  isoBlock(14, 6, 2, 1.5, '#80cbc4','#4db6ac','#26a69a', 0.6);
-  drawEquipment(10.5, 5.2, '🛏');
-  drawEquipment(14.5, 5.5, '💊');
-
-  // Amb2: lettino
-  isoBlock(10, 10, 2, 1.5, '#ef9a9a','#e57373','#ef9a9a', 0.4);
-  isoBlock(14, 10.5, 2, 1.5, '#80cbc4','#4db6ac','#26a69a', 0.6);
-  drawEquipment(10.5, 9.5, '🛏');
-  drawEquipment(14.5, 10, '💉');
-
-  // ── AMBULANZE PARCHEGGIATE ──
-  for (const amb of ambulances) {
-    if (player.inVehicle && player.vehicle === amb) continue;
-    drawAmbulance(amb.wx, amb.wy, amb.angle, amb.broken ? '#e74c3c' : '#f5f6fa', false);
-    drawLabel(amb.wx, amb.wy, -1.4, amb.id, amb.broken ? '#ef5350' : '#90caf9');
-  }
-
-  // ── TARGET EMERGENZA ──
-  if (target.active) {
-    const {sx, sy} = w2s(target.wx, target.wy);
-    const pulse = Math.sin(frame * 0.08) * 12 + 20;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(sx, sy, pulse, 0, Math.PI*2);
-    ctx.fillStyle = 'rgba(255,23,68,0.2)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(sx, sy, 14, 0, Math.PI*2);
-    ctx.fillStyle = '#ff1744';
-    ctx.shadowColor = '#ff1744'; ctx.shadowBlur = 20;
-    ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('SOS', sx, sy + 5);
-
-    // Freccia guida
-    if (player.inVehicle) {
-      const {sx: px, sy: py} = w2s(player.vehicle.wx, player.vehicle.wy);
-      const dx = sx - px, dy = sy - py;
-      const dist_ = Math.sqrt(dx*dx+dy*dy);
-      if (dist_ > 80) {
-        const nx = dx/dist_, ny = dy/dist_;
-        ctx.save();
-        ctx.globalAlpha = 0.7 + Math.sin(frame*0.1)*0.3;
-        ctx.fillStyle = '#ff1744';
-        ctx.translate(px + nx*55, py + ny*55);
-        ctx.rotate(Math.atan2(dy, dx));
-        ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-6,-6); ctx.lineTo(-6,6); ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+  // ── STEP 4: get ambulance ──
+  if(G.hStep===4){
+    // near any ambulance?
+    let nearAmb=null,nearDist=Infinity;
+    for(const a of G.ambulances){const dd=d2(p.wx,p.wy,a.wx,a.wy);if(dd<nearDist){nearDist=dd;nearAmb=a;}}
+    const near=nearDist<(1.8)**2;
+    if(near){
+      if(nearAmb.ok){prEl.textContent='[ E ] Sali sulla '+nearAmb.id+'!';}
+      else{prEl.textContent='❌ '+nearAmb.id+': '+nearAmb.danno;}
+      prEl.classList.add('show');
+    }else{prEl.textContent='🚑 Raggiungi il PARCHEGGIO';prEl.classList.add('show');}
+    if(near&&actionTap){
+      if(!nearAmb.ok){
+        toast('❌ '+nearAmb.id+'\n'+nearAmb.danno+'\n'+nearAmb.emoji,'red',3500);
+        beep(200,.4,'sawtooth',.35);
+        return;
       }
+      // start driving!
+      startCity();
+    }
+    return;
+  }
+}
+
+// ── START CITY ──────────────────────────────────────────────────
+function startCity(){
+  G.scene='city';G.hStep=5;
+  G.onFoot=false;
+  G.driveStart=performance.now();
+  // spawn car at hospital exit
+  G.car={x:(CITY_START.tx+.5)*CTS,y:(CITY_START.ty+.5)*CTS,a:-Math.PI/2,spd:0,siren:false,sirenTick:0};
+  G.footC={x:G.car.x,y:G.car.y,a:0,vx:0,vy:0,anim:0};
+  G.crew=[
+    {name:G.targetNurse,col:'#1b7a35',x:G.car.x-40,y:G.car.y,anim:0},
+    {name:'Dott.'+G.amb1Med,col:'#8b2222',x:G.car.x+40,y:G.car.y,anim:0},
+  ];
+  spawnCityNPCs();
+  hideBubbles();clearInterval(ambientBubbleTm);
+  document.getElementById('drv-hud').classList.add('show');
+  document.getElementById('minimap').classList.add('show');
+  document.getElementById('prox').classList.remove('show');
+  setHud(`🚨 ${G.mission.emoji} VAI A: ${G.mission.luogo} — sirena per andare più veloci!`,'🚨');
+  toast('Partenza! Raggiungi '+G.mission.luogo+'!','blue',3500);
+  sStart();
+}
+
+// ── CITY NPC SPAWN ───────────────────────────────────────────────
+function spawnCityNPCs(){
+  G.cityNPCs=[];
+  const base=4+G.level*3;  // more per level
+  let attempts=0;
+  while(G.cityNPCs.length<base&&attempts<500){
+    attempts++;
+    const tx=Math.floor(Math.random()*CMW),ty=Math.floor(Math.random()*CMH);
+    if(CMAP[ty]&&CMAP[ty][tx]===CT.R){
+      G.cityNPCs.push({
+        x:(tx+.5)*CTS,y:(ty+.5)*CTS,
+        a:Math.random()*Math.PI*2,
+        spd:.8+Math.random()*.6,
+        anim:Math.random()*10,
+        size:12+Math.random()*4,
+        hp:2+Math.floor(G.level/2),
+        stunTm:0,lying:false,fleeTm:0,
+        frase:rnd(PAZZO_FRASI),
+        fraseTimer:Math.random()*5,
+        col:rnd(['#c0392b','#8e44ad','#2471a3','#1abc9c','#e74c3c']),
+      });
     }
   }
+}
 
-  // ── NPC ──
-  for (const npc of npcs) {
-    drawHuman(npc.wx, npc.wy, npc.color, npc.name, npc.role);
-  }
+// ── CITY PHYSICS ─────────────────────────────────────────────────
+const VEH_ACC=0.009,VEH_MAX=7,VEH_SIR=10,VEH_FRIC=0.87,VEH_STEER=0.065;
+const FOOT_SPD=3.5;
 
-  // ── PLAYER ──
-  if (player.inVehicle) {
-    const v = player.vehicle;
-    drawAmbulance(v.wx, v.wy, v.angle, '#f5f6fa', true);
-    drawLabel(v.wx, v.wy, -1.6, v.id + ' ►', '#00e676');
+function cityUpdate(dt){
+  const m=G.mission;
+  // ── VEHICLE ──
+  if(!G.onFoot){
+    const v=G.car;
+    let accel=0,steer=0;
+    if(KEYS['KeyW']||KEYS['ArrowUp'])accel=1;
+    if(KEYS['KeyS']||KEYS['ArrowDown'])accel=-0.6;
+    if(KEYS['KeyA']||KEYS['ArrowLeft'])steer=-1;
+    if(KEYS['KeyD']||KEYS['ArrowRight'])steer=1;
+    if(G.jActive){steer=G.jx;accel=-G.jy;}
+    const mxs=v.siren?VEH_SIR:VEH_MAX;
+    if(accel)v.spd=clamp(v.spd+accel*10*dt,-mxs*.5,mxs);
+    else v.spd*=Math.pow(VEH_FRIC,dt*60);
+    if(Math.abs(v.spd)<.04)v.spd=0;
+    if(Math.abs(v.spd)>.08)v.a+=steer*VEH_STEER*dt*60*Math.sign(v.spd);
+    const dvx=Math.cos(v.a-Math.PI/2)*v.spd,dvy=Math.sin(v.a-Math.PI/2)*v.spd;
+    const nx=v.x+dvx*dt*60,ny=v.y+dvy*dt*60;
+    const tx=Math.floor(nx/CTS),ty=Math.floor(ny/CTS);
+    if(tileWalkable(tx,ty)){v.x=nx;v.y=ny;}
+    else{if(Math.abs(v.spd)>1&&G.crashCd<=0){sCrash();G.score=Math.max(0,G.score-80);G.combo=0;G.crashCd=.8;flashSiren('rgba(255,100,0,.45)','');}v.spd*=-.3;}
+    v.x=clamp(v.x,0,CMW*CTS-1);v.y=clamp(v.y,0,CMH*CTS-1);
+    G.footC.x=v.x;G.footC.y=v.y;
+    // siren sound
+    v.sirenTick-=dt;
+    if(v.siren&&v.sirenTick<=0){beep(FR%60<30?880:660,.14,'sawtooth',.09);v.sirenTick=.14;}
+    if(G.crashCd>0)G.crashCd-=dt;
+    // exit vehicle
+    if((KEYS['KeyG']||KEYS['KeyQ'])&&!G._gHeld){exitVehicle();}
+    G._gHeld=KEYS['KeyG']||KEYS['KeyQ'];
+    // check arrival
+    const tx2=Math.floor(G.car.x/CTS),ty2=Math.floor(G.car.y/CTS);
+    if(Math.abs(tx2-m.tx)<=3&&Math.abs(ty2-m.ty)<=3)missionComplete();
   } else {
-    drawHuman(player.wx, player.wy, '#fdd835', playerName.toUpperCase().slice(0,6), 'TU');
+    // ── ON FOOT ──
+    const fc=G.footC;
+    let ax=0,ay=0;
+    const sp=FOOT_SPD;
+    if(KEYS['KeyW']||KEYS['ArrowUp'])ay-=sp;
+    if(KEYS['KeyS']||KEYS['ArrowDown'])ay+=sp;
+    if(KEYS['KeyA']||KEYS['ArrowLeft'])ax-=sp;
+    if(KEYS['KeyD']||KEYS['ArrowRight'])ax+=sp;
+    if(G.jActive){ax=G.jx*sp;ay=G.jy*sp;}
+    if(ax&&ay){ax*=.707;ay*=.707;}
+    if(ax||ay){fc.anim+=0.2;fc.a=Math.atan2(ay,ax);}
+    const nx=clamp(fc.x+ax*dt*60,0,CMW*CTS-1);
+    const ny=clamp(fc.y+ay*dt*60,0,CMH*CTS-1);
+    const tx=Math.floor(nx/CTS),ty=Math.floor(ny/CTS);
+    if(tileWalkable(tx,ty)){fc.x=nx;fc.y=ny;}
+    // crew follows
+    for(const c of G.crew){c.x=lerp(c.x,fc.x+(Math.random()-.5)*30,0.06);c.y=lerp(c.y,fc.y+(Math.random()-.5)*30,0.06);c.anim+=0.12;}
+    // re-enter vehicle
+    if((KEYS['KeyG']||KEYS['KeyQ'])&&!G._gHeld){enterVehicle();}
+    G._gHeld=KEYS['KeyG']||KEYS['KeyQ'];
+    // punch
+    if((KEYS['KeyJ']||KEYS['KeyX'])&&!G._jHeld&&G.punchCd<=0){doPunch();G._jHeld=true;}
+    if(!KEYS['KeyJ']&&!KEYS['KeyX'])G._jHeld=false;
+    if(G.punchCd>0)G.punchCd-=dt;
+    // check arrival
+    const tx2=Math.floor(fc.x/CTS),ty2=Math.floor(fc.y/CTS);
+    if(Math.abs(tx2-m.tx)<=3&&Math.abs(ty2-m.ty)<=3)missionComplete();
   }
 
-  // ── ETICHETTE STANZE ──
-  drawRoomLabel(13, 0.5, '📡 CENTRALE OPERATIVA');
-  drawRoomLabel(13, 5.5, '🏥 AMBULATORIO 1');
-  drawRoomLabel(13, 10,  '🏥 AMBULATORIO 2');
-  drawRoomLabel(3,  0.5, '🚑 PARCHEGGIO');
-
-  // ── LAMPIONI ──
-  drawLamppost(1, 1);
-  drawLamppost(6, 1);
-  drawLamppost(1, 7);
-  drawLamppost(6, 7);
-  drawLamppost(1, 13);
+  // ── NPC CITY UPDATE ──
+  updateCityNPCs(dt);
+  // ── RANDOM EVENTS ──
+  G.evtT-=dt;
+  if(G.evtT<=0){randomCityEvent();G.evtT=8+Math.random()*10;}
+  // ── DRIVING HUD ──
+  const elapsed=(performance.now()-G.driveStart)/1000;
+  document.getElementById('timer-drv').textContent=elapsed.toFixed(1)+'s';
+  const spd=G.onFoot?FOOT_SPD*10:Math.abs(G.car.spd)*60*3.6;
+  document.getElementById('spd-val').textContent=Math.round(spd);
+  const sirenEl=document.getElementById('siren-el');
+  sirenEl.textContent=G.car.siren?'🔊 SIRENA ON':'SIRENA OFF';
+  sirenEl.className=G.car.siren?'on':'';
+  // siren flash
+  if(G.car.siren){const sf=document.getElementById('sflash');sf.style.background=FR%8<4?'rgba(255,0,0,.1)':'rgba(0,0,255,.1)';sf.style.opacity=1;}
+  else{document.getElementById('sflash').style.opacity=0;}
+  // psico bar
+  const maxNPC=4+G.level*3;
+  const alive=G.cityNPCs.filter(n=>!n.lying).length;
+  document.getElementById('lvl-bar').style.width=(alive/maxNPC*100)+'%';
+  updateScoreUI();
 }
 
-// ─── HELPER DRAW ───
-function drawDoor(wx, wy) {
-  const {sx, sy} = w2s(wx, wy);
-  ctx.save();
-  ctx.fillStyle = '#4fc3f7';
-  ctx.shadowColor = '#29b6f6'; ctx.shadowBlur = 8;
-  ctx.fillRect(sx - 6, sy - 18, 12, 18);
-  ctx.restore();
+function exitVehicle(){G.onFoot=true;G.footC.x=G.car.x+Math.cos(G.car.a+Math.PI/2)*60;G.footC.y=G.car.y+Math.sin(G.car.a+Math.PI/2)*60;toast('Sceso! J=Pugno G=Risali','blue',2000);}
+function enterVehicle(){const dd=d2(G.footC.x,G.footC.y,G.car.x,G.car.y);if(dd<(80)**2){G.onFoot=false;toast('Risalito sull\'ambulanza!','green',1500);}}
+function doPunch(){
+  G.punchCd=.35;sPunch();
+  flashSiren('rgba(255,200,0,.3)','');
+  const px=G.onFoot?G.footC.x:G.car.x;
+  const py=G.onFoot?G.footC.y:G.car.y;
+  for(const n of G.cityNPCs){
+    if(n.lying||n.stunTm>0)continue;
+    if(d2(n.x,n.y,px,py)<(70)**2){
+      n.hp--;
+      if(n.hp<=0){n.lying=true;n.stunTm=6+Math.random()*8;G.score+=80;updateScoreUI();}
+      else{n.stunTm=.6;n.fleeTm=2;n.fleeX=px;n.fleeY=py;}
+      showBubble('punch_'+n.x,clamp(n.x-G._camX,5,VW-100),clamp(n.y-G._camY,5,VH-50),rnd(['POW!','CRASH!','ZONK!','BAM!']),'red-b',900);
+    }
+  }
+  // crew also punches nearby
+  for(const c of G.crew)for(const n of G.cityNPCs){if(!n.lying&&!n.stunTm&&d2(n.x,n.y,c.x,c.y)<(60)**2){n.hp=0;n.lying=true;n.stunTm=5;G.score+=40;updateScoreUI();}}
 }
 
-function drawEquipment(wx, wy, emoji) {
-  const {sx, sy} = w2s(wx, wy);
-  ctx.font = '14px Arial'; ctx.textAlign = 'center';
-  ctx.fillText(emoji, sx, sy - 4);
-}
-
-function drawLabel(wx, wy, dyTile, text, color) {
-  const {sx, sy} = w2s(wx, wy);
-  ctx.save();
-  ctx.font = 'bold 11px "Share Tech Mono",monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(sx - 36, sy + dyTile * TILE_H/2 - 11, 72, 14);
-  ctx.fillStyle = color;
-  ctx.fillText(text, sx, sy + dyTile * TILE_H/2);
-  ctx.restore();
-}
-
-function drawRoomLabel(cx, cy, text) {
-  const {sx, sy} = w2s(cx, cy);
-  ctx.save();
-  ctx.font = 'bold 12px "Share Tech Mono",monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(sx - 80, sy - 13, 160, 16);
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.fillText(text, sx, sy);
-  ctx.restore();
-}
-
-function drawHuman(wx, wy, bodyColor, nameText, roleText) {
-  const {sx, sy} = w2s(wx, wy);
-  const h = 24; // pixel altezza personaggio
-
-  ctx.save();
-  // Ombra
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath();
-  ctx.ellipse(sx, sy + 2, 10, 5, 0, 0, Math.PI*2);
-  ctx.fill();
-
-  // Corpo (rettangolo isometrico approssimato)
-  ctx.fillStyle = bodyColor;
-  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-  ctx.fillRect(sx - 7, sy - h, 14, 14); // torso
-  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-
-  // Gambe
-  ctx.fillStyle = '#37474f';
-  ctx.fillRect(sx - 7, sy - h + 14, 5, 8);
-  ctx.fillRect(sx + 2, sy - h + 14, 5, 8);
-
-  // Testa
-  ctx.fillStyle = '#ffcc80';
-  ctx.beginPath();
-  ctx.arc(sx, sy - h - 4, 7, 0, Math.PI*2);
-  ctx.fill();
-
-  // Nome
-  ctx.font = '9px "Share Tech Mono",monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#000';
-  ctx.fillRect(sx - 30, sy - h - 18, 60, 11);
-  ctx.fillStyle = bodyColor === '#fdd835' ? '#fdd835' : '#e3f2fd';
-  ctx.fillText(nameText.length > 14 ? nameText.slice(0,14) : nameText, sx, sy - h - 9);
-
-  ctx.restore();
-}
-
-function drawAmbulance(wx, wy, angle, bodyColor, active) {
-  const {sx, sy} = w2s(wx, wy);
-  ctx.save();
-  ctx.translate(sx, sy - 8);
-
-  // Ombra
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.ellipse(0, 10, 28, 12, angle, 0, Math.PI*2);
-  ctx.fill();
-
-  ctx.rotate(angle + Math.PI * 0.25); // offset isometrico
-
-  // Carrozzeria
-  ctx.fillStyle = bodyColor;
-  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
-  ctx.beginPath(); ctx.roundRect(-18, -30, 36, 60, 6); ctx.fill();
-  ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-
-  // Tetto in rilievo
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
-  ctx.fillRect(-16, -26, 32, 48);
-
-  // Striscia rossa laterale
-  ctx.fillStyle = '#c62828';
-  ctx.fillRect(-18, -10, 36, 6);
-
-  // Vetri
-  ctx.fillStyle = '#263238';
-  ctx.beginPath(); ctx.roundRect(-14, -26, 28, 14, 3); ctx.fill();
-  ctx.fillRect(-18, 4, 5, 22);
-  ctx.fillRect(13, 4, 5, 22);
-
-  // Croce rossa
-  ctx.fillStyle = '#f44336';
-  ctx.fillRect(-6, 12, 12, 4);
-  ctx.fillRect(-2, 8, 4, 12);
-
-  // Barra lampeggiante
-  ctx.fillStyle = '#546e7a';
-  ctx.fillRect(-14, -32, 28, 6);
-
-  if (active) {
-    // Lampeggio blu/rosso
-    if (frame % 30 < 15) {
-      ctx.fillStyle = '#2196f3'; ctx.shadowColor = '#2196f3'; ctx.shadowBlur = 20;
-      ctx.fillRect(-14, -32, 12, 6);
-      ctx.fillStyle = '#f44336'; ctx.shadowColor = '#f44336';
-      ctx.fillRect(2, -32, 12, 6);
+function updateCityNPCs(dt){
+  const px=G.onFoot?G.footC.x:G.car.x;
+  const py=G.onFoot?G.footC.y:G.car.y;
+  for(const n of G.cityNPCs){
+    if(n.lying){if(n.stunTm>0)n.stunTm-=dt;else if(Math.random()<.001)n.lying=false;continue;}
+    if(n.stunTm>0){n.stunTm-=dt;continue;}
+    n.anim+=.08;n.fraseTimer-=dt;
+    if(n.fraseTimer<=0){n.frase=rnd(PAZZO_FRASI);n.fraseTimer=4+Math.random()*6;}
+    // flee or chase based on level
+    const distToPl=Math.sqrt(d2(n.x,n.y,px,py));
+    if(n.fleeTm>0){
+      n.fleeTm-=dt;
+      const fx=n.x-n.fleeX,fy=n.y-n.fleeY,fl=Math.sqrt(fx*fx+fy*fy)||1;
+      n.a=Math.atan2(fy/fl,fx/fl);
+    } else if(distToPl<CTS*(2+G.level)){
+      // chase player (more aggressive each level)
+      n.a=Math.atan2(py-n.y,px-n.x);
     } else {
-      ctx.fillStyle = '#f44336'; ctx.shadowColor = '#f44336'; ctx.shadowBlur = 20;
-      ctx.fillRect(-14, -32, 12, 6);
-      ctx.fillStyle = '#2196f3'; ctx.shadowColor = '#2196f3';
-      ctx.fillRect(2, -32, 12, 6);
+      n.a+=(Math.random()-.5)*.25;
     }
-    ctx.shadowBlur = 0;
+    const nx=n.x+Math.cos(n.a)*n.spd*dt*60;
+    const ny=n.y+Math.sin(n.a)*n.spd*dt*60;
+    const tx=Math.floor(nx/CTS),ty=Math.floor(ny/CTS);
+    if(tileWalkable(tx,ty)){n.x=nx;n.y=ny;}
+    else n.a+=Math.PI*.5+(Math.random()-.5)*.5;
+    // hit by ambulance
+    if(!G.onFoot&&G.crashCd<=0&&d2(n.x,n.y,G.car.x,G.car.y)<(45)**2){
+      n.lying=true;n.stunTm=5+Math.random()*5;G.score=Math.max(0,G.score-100);G.combo=0;G.crashCd=1;sCrash();
+      toast('💥 Psicotico investito! -100 pt','red',1800);
+    }
+    // assault player on foot
+    if(G.onFoot&&G.punchCd<=0&&d2(n.x,n.y,G.footC.x,G.footC.y)<(40)**2){
+      G.score=Math.max(0,G.score-50);G.combo=0;updateScoreUI();
+      toast('😱 Ti stanno assalendo! -50 pt','red',1500);G.crashCd=1;
+      showBubble('psico_atk',clamp(n.x-G._camX,5,VW-140),clamp(n.y-G._camY,5,VH-60),n.frase,'red-b',2000);
+    }
+  }
+}
+
+function randomCityEvent(){
+  const events=['🐑 Gregge di pecore alla rotonda!','📸 Turista si è fermato per un selfie!','🚧 Lavori eterni bloccano una corsia!','👴 Gruppo pensionati al 2 km/h!','🚛 Camion incastrato in curva!'];
+  toast(rnd(events),'',2500);beep(300,.3,'sawtooth',.15);
+}
+
+function lerp(a,b,t){return a+(b-a)*t;}
+
+// ── MISSION COMPLETE ────────────────────────────────────────────
+function missionComplete(){
+  if(G.scene!=='city')return;
+  G.scene='win';
+  document.getElementById('drv-hud').classList.remove('show');
+  document.getElementById('minimap').classList.remove('show');
+  document.getElementById('sflash').style.opacity=0;
+  const elapsed=(performance.now()-G.driveStart)/1000;
+  const timeBonus=Math.max(0,Math.floor((G.mission.tempo-elapsed)*12));
+  const comboBonus=Math.floor(G.mission.punti*(G.combo*.15));
+  const total=G.mission.punti+timeBonus+comboBonus;
+  G.score+=total;G.combo++;G.mDone++;G.level=Math.min(10,1+Math.floor(G.mDone/2));
+  sJingle();updateScoreUI();
+  document.getElementById('win-arrival').textContent=rnd(ARRIVO_FRASI);
+  document.getElementById('win-time').textContent=elapsed.toFixed(2)+' secondi';
+  document.getElementById('win-pts').textContent=`+${G.mission.punti} missione  +${timeBonus} velocità  +${comboBonus} combo = ${total} pt`;
+  const nextM=MISSIONS_DEF[(G.mIdx+1)%MISSIONS_DEF.length];
+  document.getElementById('win-next').textContent=`Prossima: ${nextM.emoji} ${nextM.luogo} (Livello ${G.level})`;
+  showOv('ov-win');
+  // save score and reload classifica
+  fbSave(G.name,G.score,elapsed,G.level).then(()=>loadLb('lb-win'));
+  setTimeout(()=>{
+    // prepare next round
+    nextMission();
+    G.hStep=0;G.doctorFound=false;G.nurseFound=false;G.scene='hospital';
+    // re-randomize staff
+    const infS=shuffle(INF_NOMI);const autS=shuffle(AUTISTI_NOMI);
+    G.targetNurse=infS[6];G.amb1Med=rnd(MEDICI);G.doctorRoom=rnd(['kitchen','amb2','outside']);
+    spawnHospBubbles();
+    showOv(null);
+    setHud('Vai alla CENTRALE — nuova chiamata in arrivo!','🏥');
+    toast('Buono! Ora Livello '+G.level+' — '+nextM.emoji+' '+nextM.luogo,'green',3000);
+  },8000);
+}
+
+// ── GAME OVER ────────────────────────────────────────────────────
+function gameOver(){
+  G.scene='over';
+  document.getElementById('drv-hud').classList.remove('show');
+  document.getElementById('minimap').classList.remove('show');
+  document.getElementById('sflash').style.opacity=0;
+  sFail();
+  document.getElementById('go-insult').textContent=rnd(INSULTI);
+  document.getElementById('go-stats').innerHTML=`Punteggio: <b style="color:var(--amber)">${G.score.toLocaleString()}</b><br>Missioni: <b style="color:var(--green)">${G.mDone}</b><br>Livello raggiunto: <b style="color:var(--blue)">${G.level}</b>`;
+  document.getElementById('go-name').value=G.name;
+  showOv('ov-over');
+  loadLb('lb-over');
+}
+
+// ── RENDERING ────────────────────────────────────────────────────
+// HOSPITAL ISO DRAW HELPERS
+function iB(wx,wy,bw,bh,wh,top,ri,le,bord=true){
+  const t00=isoXY(wx,wy,wh),t10=isoXY(wx+bw,wy,wh),t01=isoXY(wx,wy+bh,wh),t11=isoXY(wx+bw,wy+bh,wh);
+  const b10=isoXY(wx+bw,wy,0),b01=isoXY(wx,wy+bh,0),b11=isoXY(wx+bw,wy+bh,0);
+  const s='rgba(0,0,0,.15)';const lw=.6;
+  cx.beginPath();cx.moveTo(t00.sx,t00.sy);cx.lineTo(t10.sx,t10.sy);cx.lineTo(t11.sx,t11.sy);cx.lineTo(t01.sx,t01.sy);cx.closePath();cx.fillStyle=top;cx.fill();if(bord){cx.strokeStyle=s;cx.lineWidth=lw;cx.stroke();}
+  cx.beginPath();cx.moveTo(t10.sx,t10.sy);cx.lineTo(t11.sx,t11.sy);cx.lineTo(b11.sx,b11.sy);cx.lineTo(b10.sx,b10.sy);cx.closePath();cx.fillStyle=ri;cx.fill();if(bord){cx.strokeStyle=s;cx.lineWidth=lw;cx.stroke();}
+  cx.beginPath();cx.moveTo(t01.sx,t01.sy);cx.lineTo(t11.sx,t11.sy);cx.lineTo(b11.sx,b11.sy);cx.lineTo(b01.sx,b01.sy);cx.closePath();cx.fillStyle=le;cx.fill();if(bord){cx.strokeStyle=s;cx.lineWidth=lw;cx.stroke();}
+}
+function iF(wx,wy,bw,bh,col,bord=true){
+  const p00=isoXY(wx,wy),p10=isoXY(wx+bw,wy),p01=isoXY(wx,wy+bh),p11=isoXY(wx+bw,wy+bh);
+  cx.beginPath();cx.moveTo(p00.sx,p00.sy);cx.lineTo(p10.sx,p10.sy);cx.lineTo(p11.sx,p11.sy);cx.lineTo(p01.sx,p01.sy);cx.closePath();cx.fillStyle=col;cx.fill();if(bord){cx.strokeStyle='rgba(0,0,0,.07)';cx.lineWidth=.4;cx.stroke();}
+}
+function iL(x0,y0,x1,y1,col,lw=1){const a=isoXY(x0,y0),b=isoXY(x1,y1);cx.beginPath();cx.moveTo(a.sx,a.sy);cx.lineTo(b.sx,b.sy);cx.strokeStyle=col;cx.lineWidth=lw;cx.stroke();}
+function iE(wx,wy,wz,e,sz=14){const{sx,sy}=isoXY(wx,wy,wz);cx.font=sz+'px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(e,sx,sy);}
+function iLabel(wx,wy,txt,col='rgba(200,220,255,.5)'){
+  const{sx,sy}=isoXY(wx,wy,.05);cx.save();cx.font='bold 11px monospace';
+  const tw=cx.measureText(txt).width+14;cx.fillStyle='rgba(0,0,0,.55)';cx.fillRect(sx-tw/2,sy-8,tw,14);
+  cx.fillStyle=col;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(txt,sx,sy);cx.restore();
+}
+function screenToIsoWorld(sx,sy){/* not needed */}
+function isoLamp(wx,wy){const{sx,sy}=isoXY(wx,wy,0);const top=isoXY(wx,wy,2);cx.save();const g=cx.createRadialGradient(sx,top.sy,3,sx,top.sy,55);g.addColorStop(0,'rgba(255,220,100,.28)');g.addColorStop(1,'rgba(255,220,100,0)');cx.fillStyle=g;cx.beginPath();cx.arc(sx,top.sy,55,0,Math.PI*2);cx.fill();cx.strokeStyle='#5a7080';cx.lineWidth=3;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx,top.sy);cx.stroke();cx.fillStyle='#ffe082';cx.shadowColor='#ffe082';cx.shadowBlur=16;cx.beginPath();cx.arc(sx,top.sy,5,0,Math.PI*2);cx.fill();cx.restore();}
+function ceilLight(wx,wy){const{sx,sy}=isoXY(wx,wy,2.3);cx.save();cx.globalAlpha=.45;const g=cx.createRadialGradient(sx,sy,2,sx,sy,42);g.addColorStop(0,'rgba(210,235,255,.35)');g.addColorStop(1,'rgba(210,235,255,0)');cx.fillStyle=g;cx.beginPath();cx.arc(sx,sy,42,0,Math.PI*2);cx.fill();cx.fillStyle='#ddf';cx.fillRect(sx-14,sy-2,28,4);cx.restore();}
+function clock(wx,wy){const{sx,sy}=isoXY(wx,wy,1.7);cx.save();cx.fillStyle='#eef4fb';cx.strokeStyle='#7a8fa0';cx.lineWidth=1.5;cx.beginPath();cx.arc(sx,sy,9,0,Math.PI*2);cx.fill();cx.stroke();const h=(FR*.001)%(Math.PI*2);cx.strokeStyle='#334';cx.lineWidth=1.6;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+Math.cos(h-Math.PI/2)*5,sy+Math.sin(h-Math.PI/2)*5);cx.stroke();cx.lineWidth=1;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+Math.cos(h*12-Math.PI/2)*7,sy+Math.sin(h*12-Math.PI/2)*7);cx.stroke();cx.restore();}
+function medBed(wx,wy,col='#e8eef4'){
+  iB(wx,wy,2.3,1.1,.32,'#b8c0c8','#98a0a8','#8890a0');
+  iB(wx+.1,wy+.1,2.1,.9,.5,col,'#c0c8c0','#b0b8b0');
+  iB(wx+.15,wy+.15,.65,.5,.64,'#f2f6fc','#d2d6dc','#c2c6cc');
+  iB(wx-.05,wy,.1,1.1,.9,'#a0a8b0','#8890a0','#7888a0');
+}
+function chair(wx,wy){iB(wx,wy,.55,.55,.42,'#3a5068','#2a4058','#1e3448');iB(wx+.05,wy-.05,.45,.1,.85,'#3a5068','#2a4058','#1e3448');}
+function sink(wx,wy){iB(wx,wy,.9,.6,.45,'#cdd9e4','#aab6c2','#9aa6b2');const{sx,sy}=isoXY(wx+.45,wy+.3,.55);cx.save();cx.fillStyle='#7a8a9a';cx.fillRect(sx-2,sy-8,4,8);cx.restore();}
+
+function drawHospital(){
+  recalcISO();
+  cx.fillStyle='#05101e';cx.fillRect(0,0,VW,VH);
+  // floors
+  for(let y=0;y<14;y++)for(let x=0;x<8;x++)iF(x,y,1,1,(x+y)%2?'#162230':'#131e2c',false);
+  for(let y=0;y<14;y++)for(let x=8;x<18;x++)iF(x,y,1,1,(x+y)%2?'#dde8f2':'#cdd8e8',false);
+  cx.save();cx.globalAlpha=.2;for(let y=0;y<=14;y++)iL(8,y,18,y,'#7d90a8',.38);for(let x=8;x<=18;x++)iL(x,0,x,14,'#7d90a8',.38);cx.restore();
+  // room tints
+  iF(8.3,.3,9.4,3.5,'rgba(35,110,200,.11)',false);
+  iF(8.3,4.3,9.4,3.5,'rgba(25,190,110,.09)',false);
+  iF(8.3,8.3,9.4,4.5,'rgba(210,130,25,.08)',false);
+  iF(8.3,10.3,9.4,2.8,'rgba(180,40,160,.09)',false);  // kitchen tint
+  // parking stripes
+  cx.save();cx.globalAlpha=.55;[[1.5,3.5],[4.5,6.5],[7.5,9.5]].forEach(([y0,y1])=>{iL(1.2,y0,1.2,y1,'#ffc233',2.5);iL(3.4,y0,3.4,y1,'#ffc233',2.5);});cx.restore();
+  const WH=2.6;
+  // WALLS
+  iB(8,-.4,10,.4,WH,'#cbd8e4','#9ab0bf','#8aa0ae');
+  iB(17.6,0,.4,14,WH,'#cbd8e4','#9ab0bf','#8aa0ae');
+  iB(8,13.6,9.6,.4,WH,'#cbd8e4','#9ab0bf','#8aa0ae');
+  // west wall with door gaps
+  [[0,1.35],[2.65,5.55],[6.85,9.55],[11.25,14]].forEach(([y0,y1])=>{if(y1>y0)iB(HWALLX,y0,.4,y1-y0,WH,'#cbd8e4','#9ab0bf','#8aa0ae');});
+  // internal dividers (no door gap shows as plain walls with color split)
+  iB(8,4,.35,4.0,WH*.76,'#d3dfe8','#a4b4c2','#90a2b0');
+  iB(13,4,.35,4.0,WH*.76,'#d3dfe8','#a4b4c2','#90a2b0');
+  iB(8,8,.35,4.2,WH*.76,'#d3dfe8','#a4b4c2','#90a2b0');
+  iB(13,8,.35,4.2,WH*.76,'#d3dfe8','#a4b4c2','#90a2b0');
+  // kitchen divider
+  iB(8,12,.35,2,WH*.5,'#d3dfe8','#a4b4c2','#90a2b0');
+  iB(13.5,12,.35,2,WH*.5,'#d3dfe8','#a4b4c2','#90a2b0');
+  // door glows
+  [2,6.2,10.5].forEach(wy=>{const{sx,sy}=isoXY(HWALLX,wy,0);cx.save();cx.fillStyle='rgba(51,180,255,.5)';cx.shadowColor='#33b4ff';cx.shadowBlur=10;cx.fillRect(sx-7,sy-34,15,34);cx.restore();});
+  [5.9,9.9,12.8].forEach(wy=>{const{sx,sy}=isoXY(12.4,wy,0);cx.save();cx.fillStyle='rgba(51,180,255,.28)';cx.fillRect(sx-5,sy-26,12,26);cx.restore();});
+
+  // ─── CENTRALE (y 0-4) ───
+  iB(8.8,.7,3.5,.95,.5,'#3e5266','#324356','#2a3a4c');
+  for(let i=0;i<3;i++){
+    iB(9.1+i,'78'.replace('78','.78')-.78+.78,wy=>.78,wy=>.45,1.05,'#15222f','#0e1a24','#0a141c');
+    // monitor
+    iB(9.1+i*1.05,.80,.6,.42,1.05,'#15222f','#0e1a24','#0a141c');
+    const m=isoXY(9.4+i*1.05,1.05,1.25);cx.save();cx.fillStyle='rgba(40,175,255,.48)';cx.shadowColor='#33b4ff';cx.shadowBlur=12;cx.fillRect(m.sx-10,m.sy-8,19,12);cx.restore();
+  }
+  iB(15.5,.6,1.4,.8,.7,'#2a3a48','#1e2c38','#18242e');iE(16.2,1.0,.95,'📻',17);
+  chair(10,2.5);chair(11.4,2.7);
+  iB(8.8,3,1.3,.7,.85,'#445566','#374756','#2e3c48');iE(9.3,3.3,.9,'🗂️',14);
+  clock(17.3,1.4);ceilLight(11,1.2);ceilLight(14.8,1.2);
+  // sleeping autisti on desk
+  const{sx:sa1,sy:sy1}=isoXY(12,2.5,0.65);cx.save();cx.font='22px serif';cx.textAlign='center';cx.fillText('😴',sa1,sy1);cx.restore();
+  const{sx:sa2,sy:sy2}=isoXY(13.5,3,0.65);cx.save();cx.font='22px serif';cx.textAlign='center';cx.fillText('😴',sa2,sy2);cx.restore();
+
+  // ─── AMBULATORIO 1 (y 4-8) ───
+  medBed(9,4.9,'#e8eef4');
+  // IV pole
+  iB(11.4,4.9,.1,.1,1.6,'#9aacba','#8090a0','#70808e');iB(11.28,4.78,.34,.34,0,'#9aacba','#8090a0','#70808e');iE(11.45,4.5,1.5,'💧',11);
+  // vital monitor
+  iB(11.8,5.0,.7,.5,1.0,'#1a2a38','#12202c','#0e1a24');
+  const vm=isoXY(12.15,5.25,1.15);cx.save();cx.fillStyle='rgba(30,255,120,.55)';cx.shadowColor='#1de982';cx.shadowBlur=12;cx.fillRect(vm.sx-10,vm.sy-7,18,11);
+  // heartbeat
+  cx.strokeStyle='#0c0';cx.lineWidth=1;cx.beginPath();const hb=(FR*.1)%18;cx.moveTo(vm.sx-9,vm.sy);for(let i=0;i<18;i++){const xx=vm.sx-9+i,yy=vm.sy+(Math.abs(i-hb)<1?-5:Math.abs(i-hb)<2?3:0);i===0?cx.moveTo(xx,yy):cx.lineTo(xx,yy);}cx.stroke();cx.restore();
+  iB(14.2,4.8,1.7,1.0,.9,'#4a6080','#3a5070','#2e4060');iE(14.95,5.3,1.0,'💊',15);
+  sink(16.3,4.8);
+  iB(13,6.3,.9,.7,.5,'#5a7090','#4a6080','#3e5070');iE(13.4,6.65,.6,'🩺',14);
+  chair(12.1,7.1);ceilLight(11,5.5);ceilLight(15,5.5);
+
+  // ─── AMBULATORIO 2 (y 8-12) ───
+  medBed(9,8.9,'#eef2e0');
+  iB(13.4,8.8,1.4,1.0,.7,'#2e4460','#243852','#1e3048');
+  iB(13.5,8.9,1.2,.5,1.05,'#16283a','#101e2c','#0c1722');
+  const df=isoXY(14.0,9.2,1.2);cx.save();cx.fillStyle='rgba(255,80,80,.5)';cx.shadowColor='#ff5050';cx.shadowBlur=10;cx.fillRect(df.sx-9,df.sy-6,17,10);cx.restore();iE(14.1,9.0,1.0,'⚡',14);
+  const xr=isoXY(16.5,8.6,1.6);cx.save();cx.fillStyle='rgba(200,230,255,.88)';cx.shadowColor='#fff';cx.shadowBlur=8;cx.fillRect(xr.sx-10,xr.sy-12,20,16);cx.fillStyle='#334';cx.font='9px serif';cx.fillText('☒',xr.sx,xr.sy);cx.restore();
+  sink(16.3,10.2);chair(12.1,10.9);ceilLight(11,9.5);ceilLight(15,9.8);
+
+  // ─── KITCHEN (y 12-14) ───
+  // table with food debris
+  iB(9.5,12.5,2,.8,.42,'#6a4e32','#4e3820','#3c2a18');
+  iB(14,12.5,1.8,.7,.38,'#6a4e32','#4e3820','#3c2a18');
+  iE(10.5,12.9,.5,'🍕',16);iE(11.5,12.9,.5,'☕',16);iE(14.5,12.7,.4,'🥪',16);iE(15.2,12.7,.4,'📱',14);
+  // microwave
+  iB(16.2,12.4,1.3,.5,.55,'#445566','#334455','#2a3444');
+  iE(16.7,12.7,.6,'🍱',14);
+  // fridge
+  iB(8.5,12,.5,1.8,.95,'#c8d8e4','#a8b8c4','#98a8b4');iE(8.6,12.8,1.0,'❄️',14);
+  ceilLight(12,13);
+  iL(8.5,12,8.5,14,'#ffc233',1.5); // kitchen area line
+
+  // ─── AMBULANCES ───
+  for(const a of G.ambulances)drawHospAmbulance(a);
+
+  // ─── COLLECT ALL ENTITIES FOR DEPTH SORT ───
+  const entities=[];
+  // staff in ambulatori
+  const staffPos=[
+    {wx:9.8,wy:5.5,name:G.amb1Inf[0],col:'#1b7a35',role:'inf'},
+    {wx:11.2,wy:6.2,name:G.amb1Inf[1],col:'#1b7a35',role:'inf'},
+    {wx:9.8,wy:9.5,name:G.amb2Inf[0],col:'#1b7a35',role:'inf'},
+    {wx:11.2,wy:10.4,name:G.amb2Inf[1],col:'#1b7a35',role:'inf'},
+    // medici
+    {wx:10.5,wy:5.0,name:'Dr. '+G.amb1Med,col:'#1a3a8a',role:'doc'},
+    {wx:10.5,wy:9.0,name:'Dr. '+G.amb2Med,col:'#1a3a8a',role:'doc'},
+    // kitchen
+    {wx:10,wy:12.8,name:G.kitchenStaff[0],col:'#e67e22',role:'aut'},
+    {wx:11.5,wy:13.2,name:G.kitchenStaff[1],col:'#1b7a35',role:'inf'},
+    {wx:14.5,wy:12.9,name:G.kitchenStaff[2],col:'#1b7a35',role:'inf'},
+    // centrale autisti (sleeping)
+    {wx:12.2,wy:2.3,name:G.centraleAut[0],col:'#e67e22',role:'aut',sleeping:true},
+    {wx:13.7,wy:2.9,name:G.centraleAut[1],col:'#e67e22',role:'aut',sleeping:true},
+    // primario
+    {wx:9.2,wy:1.2,name:'Prim. Valentino',col:PRIMARIO.col,role:'prim'},
+    // caposala
+    {wx:12.5,wy:5.2,name:'Cap. Frisoni',col:CAPOSALA.col,role:'capo'},
+    // angry target nurse
+    {wx:10.2,wy:6.8,name:G.targetNurse+'(!)',col:'#c0392b',role:'inf'},
+  ];
+  // hidden doctor appears in their hiding spot
+  if(!G.doctorFound){
+    const drPos={kitchen:{wx:9.5,wy:13},amb2:{wx:12,wy:11.5},outside:{wx:4,wy:8}};
+    const dp=drPos[G.doctorRoom]||{wx:9.5,wy:13};
+    staffPos.push({wx:dp.wx,wy:dp.wy,name:'Dr. '+G.amb1Med+' (?)' ,col:'#7f8c8d',role:'doc'});
+  }
+  for(const s of staffPos){
+    const anim=FR*.04+s.wx*.3;
+    entities.push({type:'human',wx:s.wx,wy:s.wy,name:s.name,col:s.col,anim,angle:Math.sin(FR*.015+s.wx)*.4,isPlayer:false,special:s.role,sleeping:s.sleeping});
+  }
+  // player
+  entities.push({type:'human',wx:G.hp.wx,wy:G.hp.wy,name:G.name.slice(0,8).toUpperCase(),col:'#f9a825',anim:G.hp.anim,angle:G.hp.angle,isPlayer:true});
+  // depth sort
+  entities.sort((a,b)=>(a.wx+a.wy)-(b.wx+b.wy));
+  for(const e of entities)drawIsoHuman(e.wx,e.wy,e.angle,e.anim,e.col,e.name,e.isPlayer,e.sleeping,e.special);
+
+  // ─── ROOM LABELS ───
+  iLabel(13,1.8,'📡 CENTRALE OPERATIVA','rgba(80,180,255,.6)');
+  iLabel(13,5.8,'🏥 AMBULATORIO 1','rgba(60,220,130,.6)');
+  iLabel(13,9.8,'🏥 AMBULATORIO 2','rgba(230,170,60,.6)');
+  iLabel(12,13,'🍽️ CUCINA / BREAK','rgba(255,160,60,.6)');
+  iLabel(2.5,-.3,'🚑 PARCHEGGIO','rgba(255,194,51,.5)');
+  // step hint arrow
+  const hintPos={0:isoXY(13,1.8,0),1:isoXY(13,1.8,0),2:G.doctorRoom==='kitchen'?isoXY(12,13,0):G.doctorRoom==='amb2'?isoXY(13,9.8,0):isoXY(2,8,0),3:isoXY(13,5.8,0),4:isoXY(2,6,0)};
+  if(hintPos[G.hStep]){const h=hintPos[G.hStep];const pulse=.6+.4*Math.sin(FR*.15);cx.save();cx.globalAlpha=pulse;cx.fillStyle='#ffc233';cx.font='20px serif';cx.textAlign='center';cx.fillText('⬇️',h.sx,h.sy-22);cx.restore();}
+  // lamps
+  [1,1.5,1,7,1,12,5.5,2.5,5.5,11].reduce((acc,v,i)=>i%2===0?[v]:[...acc,{x:acc[0],y:v}],[]).forEach(p=>{if(p.x)isoLamp(p.x,p.y);});
+  isoLamp(1,1.5);isoLamp(1,7);isoLamp(1,12);isoLamp(5.5,3);isoLamp(5.5,11);
+  // vignette
+  const vg=cx.createRadialGradient(VW/2,VH/2,VH*.26,VW/2,VH/2,VH*.86);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.52)');cx.fillStyle=vg;cx.fillRect(0,0,VW,VH);
+}
+
+// ─── ISO HUMAN ───────────────────────────────────────────────────
+function drawIsoHuman(wx,wy,angle,anim,bodyCol,nameText,isPlayer,sleeping,special){
+  const{sx,sy}=isoXY(wx,wy,0);
+  cx.save();cx.translate(sx,sy);
+  const moving=isPlayer&&(Math.abs(G.hp.vx)>.003||Math.abs(G.hp.vy)>.003||KEYS['KeyW']||KEYS['KeyS']||KEYS['KeyA']||KEYS['KeyD']);
+  const walk=moving?Math.sin(anim*2)*1.2:0;
+  const bob=moving?Math.abs(Math.sin(anim*2))*1.8:0;
+  const h=34;
+  if(sleeping){cx.globalAlpha=.8;}
+  // shadow
+  cx.fillStyle='rgba(0,0,0,.28)';cx.beginPath();cx.ellipse(0,4,11,5,0,0,Math.PI*2);cx.fill();
+  // legs
+  const lc=isPlayer?'#152060':'#26303e';
+  cx.fillStyle=lc;cx.save();cx.translate(-4,-h+15);cx.rotate(walk*.065);cx.fillRect(-3,0,6,13);cx.fillStyle='#111';cx.fillRect(-3,11,7,4);cx.restore();
+  cx.fillStyle=lc;cx.save();cx.translate(4,-h+15);cx.rotate(-walk*.065);cx.fillRect(-3,0,6,13);cx.fillStyle='#111';cx.fillRect(-3,11,7,4);cx.restore();
+  // torso
+  cx.shadowColor='rgba(0,0,0,.38)';cx.shadowBlur=5;cx.shadowOffsetY=2;
+  cx.fillStyle=bodyCol;cx.beginPath();cx.roundRect(-7.5,-h,15,14,3);cx.fill();cx.shadowBlur=0;cx.shadowOffsetY=0;
+  // uniform stripes
+  cx.fillStyle='rgba(255,255,255,.5)';cx.fillRect(-7.5,-h+5,15,1.5);cx.fillRect(-7.5,-h+9,15,1.5);
+  // cross badge
+  cx.fillStyle='#fff';cx.fillRect(-5,-h+1.5,3.5,3.5);cx.fillStyle='#c00';cx.fillRect(-4.6,-h+1.9,2.7,2.7);
+  // special badge for primario/caposala
+  if(special==='prim'){cx.fillStyle='#ffcc00';cx.font='bold 8px monospace';cx.textAlign='center';cx.fillText('DR',0,-h+7);}
+  if(special==='capo'){cx.fillStyle='#dd00dd';cx.font='bold 7px monospace';cx.textAlign='center';cx.fillText('CS',0,-h+7);}
+  // arms
+  cx.fillStyle=bodyCol;
+  cx.save();cx.translate(-9.5,-h+2);cx.rotate(walk*.07);cx.beginPath();cx.roundRect(-3,0,5,11,2);cx.fill();cx.fillStyle='#f0c088';cx.beginPath();cx.arc(-.5,12,3,0,Math.PI*2);cx.fill();cx.restore();
+  cx.fillStyle=bodyCol;cx.save();cx.translate(9.5,-h+2);cx.rotate(-walk*.07);cx.beginPath();cx.roundRect(-2,0,5,11,2);cx.fill();cx.fillStyle='#f0c088';cx.beginPath();cx.arc(.5,12,3,0,Math.PI*2);cx.fill();cx.restore();
+  // neck
+  cx.fillStyle='#e0b08a';cx.fillRect(-2,-h-2,4,4);
+  // head
+  cx.save();cx.translate(0,-h-bob);
+  cx.fillStyle='#f2c48a';cx.shadowColor='rgba(0,0,0,.3)';cx.shadowBlur=4;cx.beginPath();cx.ellipse(0,-4,7,8,0,0,Math.PI*2);cx.fill();cx.shadowBlur=0;
+  cx.fillStyle=isPlayer?'#2a1d10':special==='prim'?'#3a0000':'#1a1a1a';cx.beginPath();cx.ellipse(0,-9,7.2,5,0,Math.PI,Math.PI*2);cx.fill();
+  cx.fillStyle='#fff';cx.beginPath();cx.arc(-3,-4.5,1.6,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(3,-4.5,1.6,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#1a1a2e';cx.beginPath();cx.arc(-3,-4.5,.9,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(3,-4.5,.9,0,Math.PI*2);cx.fill();
+  cx.strokeStyle='#b06a50';cx.lineWidth=1;cx.beginPath();cx.arc(0,-1.5,2.3,.1,Math.PI-.1);cx.stroke();
+  if(sleeping){cx.font='16px serif';cx.textAlign='center';cx.fillText('💤',-2,-14);}
+  if(isPlayer){cx.fillStyle='#1565c0';cx.beginPath();cx.ellipse(0,-10,8,5,0,Math.PI,Math.PI*2);cx.fill();cx.fillRect(-8,-10.5,16,2.5);cx.fillStyle='#ef5350';cx.fillRect(-1.5,-12,3,5);cx.fillRect(-4,-10.5,8,2);}
+  if(special==='prim'){cx.fillStyle='#8b0000';cx.beginPath();cx.ellipse(0,-9.5,8,4.5,0,Math.PI,Math.PI*2);cx.fill();cx.fillRect(-8,-9.5,16,2);cx.fillStyle='#ffd700';cx.font='8px serif';cx.textAlign='center';cx.fillText('★',0,-11);}
+  cx.restore();
+  // name tag
+  if(nameText){cx.font='bold 10px monospace';const tw=cx.measureText(nameText).width;cx.fillStyle='rgba(0,0,0,.72)';cx.fillRect(-tw/2-5,-h-29,tw+10,13);cx.fillStyle=isPlayer?'#ffd740':special==='prim'?'#ff8888':special==='capo'?'#ee88ff':bodyCol==='#1b7a35'||bodyCol==='#1b7a35'?'#a5d6a7':bodyCol==='#1a3a8a'?'#90caf9':'#ffc47a';cx.textAlign='center';cx.fillText(nameText,0,-h-19);}
+  cx.globalAlpha=1;
+  cx.restore();
+}
+
+// ─── HOSPITAL AMBULANCE (detailed iso) ──────────────────────────
+function drawHospAmbulance(a){
+  const{sx,sy}=isoXY(a.wx,a.wy,0);
+  cx.save();cx.translate(sx,sy-10);
+  const bodyT=a.ok?'#eef3f8':'#d88';
+  // shadow
+  cx.globalAlpha=.3;cx.fillStyle='#000';cx.beginPath();cx.ellipse(0,10,30,13,0,0,Math.PI*2);cx.fill();cx.globalAlpha=1;
+  // top face
+  cx.fillStyle=bodyT;cx.beginPath();cx.moveTo(-28,-6);cx.lineTo(0,-20);cx.lineTo(28,-6);cx.lineTo(0,8);cx.closePath();cx.fill();cx.strokeStyle='rgba(0,0,0,.2)';cx.lineWidth=.8;cx.stroke();
+  // right side
+  cx.fillStyle=a.ok?'#c2cbD4':'#b66';cx.beginPath();cx.moveTo(28,-6);cx.lineTo(28,16);cx.lineTo(0,30);cx.lineTo(0,8);cx.closePath();cx.fill();cx.stroke();
+  // left side
+  cx.fillStyle=a.ok?'#b0b9c2':'#a55';cx.beginPath();cx.moveTo(-28,-6);cx.lineTo(-28,16);cx.lineTo(0,30);cx.lineTo(0,8);cx.closePath();cx.fill();cx.stroke();
+  // red stripe
+  cx.fillStyle='#cc2222';cx.beginPath();cx.moveTo(28,2);cx.lineTo(28,8);cx.lineTo(0,22);cx.lineTo(0,16);cx.closePath();cx.fill();
+  cx.beginPath();cx.moveTo(-28,2);cx.lineTo(-28,8);cx.lineTo(0,22);cx.lineTo(0,16);cx.closePath();cx.fill();
+  // cross
+  cx.fillStyle='#dd2222';cx.fillRect(11,6,4,10);cx.fillRect(8,9,10,4);
+  // windshield
+  cx.fillStyle='#1a3048';cx.beginPath();cx.moveTo(-15,-10);cx.lineTo(0,-18);cx.lineTo(15,-10);cx.lineTo(0,-3);cx.closePath();cx.fill();
+  // light bar
+  if(a.ok){const bl=FR%30<15;cx.fillStyle=bl?'#2196f3':'#f44336';cx.shadowColor=bl?'#2196f3':'#f44336';cx.shadowBlur=10;cx.fillRect(-11,-22,9,4);cx.fillStyle=bl?'#f44336':'#2196f3';cx.shadowColor=bl?'#f44336':'#2196f3';cx.fillRect(3,-22,9,4);cx.shadowBlur=0;}
+  if(!a.ok&&FR%8<4){cx.font='18px serif';cx.textAlign='center';cx.fillText(a.emoji||'💨',0,-30);}
+  cx.restore();
+  // label
+  const lw=a.ok?62:80;const ls=isoXY(a.wx,a.wy,0);
+  cx.save();cx.fillStyle='rgba(0,0,0,.72)';cx.fillRect(ls.sx-lw/2,ls.sy+14,lw,14);cx.fillStyle=a.ok?'#80d4ff':'#ff6a88';cx.font='bold 10px monospace';cx.textAlign='center';cx.fillText(a.ok?a.id:'❌ '+a.id,ls.sx,ls.sy+24);cx.restore();
+  // damage label if broken
+  if(!a.ok){
+    cx.save();cx.font='9px monospace';cx.fillStyle='rgba(0,0,0,.7)';const dw=cx.measureText(a.danno||'').width+8;cx.fillRect(ls.sx-dw/2,ls.sy+28,dw,12);cx.fillStyle='#ffaaaa';cx.textAlign='center';cx.fillText(a.danno||'',ls.sx,ls.sy+37);cx.restore();
+  }
+}
+
+// ─── CITY RENDER ─────────────────────────────────────────────────
+const CITY_TILE_COLS={[CT.R]:['#262626','#222'],[CT.B]:null,[CT.G]:['#2a5a20','#265518'],[CT.S]:['#383838','#323232'],[CT.P]:['#1e2830','#1a2428']};
+const BLD_COLS=[['#42301e','#371e0a'],['#3a2a14','#2e1e0a'],['#2a3040','#22263a'],['#1a3a1a','#0a2a0a']];
+
+function drawCity(){
+  cx.fillStyle='#080e16';cx.fillRect(0,0,VW,VH);
+  const px=G.onFoot?G.footC.x:G.car.x;
+  const py=G.onFoot?G.footC.y:G.car.y;
+  const camX=clamp(px-VW/2,0,CMW*CTS-VW);
+  const camY=clamp(py-VH/2,0,CMH*CTS-VH);
+  G._camX=camX;G._camY=camY;
+  const stx=Math.max(0,Math.floor(camX/CTS));
+  const sty=Math.max(0,Math.floor(camY/CTS));
+  const etx=Math.min(CMW,Math.ceil((camX+VW)/CTS)+1);
+  const ety=Math.min(CMH,Math.ceil((camY+VH)/CTS)+1);
+
+  // TILES
+  for(let ty=sty;ty<ety;ty++){
+    for(let tx=stx;tx<etx;tx++){
+      const tile=CMAP[ty][tx];
+      const sx=tx*CTS-camX,sy=ty*CTS-camY;
+      if(tile===CT.B){
+        const bc=BLD_COLS[(tx*3+ty*7)%BLD_COLS.length];
+        cx.fillStyle=(tx+ty)%2?bc[0]:bc[1];cx.fillRect(sx,sy,CTS,CTS);
+        // windows with glow
+        const wlit=((FR+tx*11+ty*7)%120<55);
+        cx.fillStyle=wlit?'rgba(255,230,100,.55)':'rgba(80,80,60,.2)';
+        cx.fillRect(sx+7,sy+7,12,9);cx.fillRect(sx+CTS-19,sy+7,12,9);
+        cx.fillRect(sx+7,sy+CTS-18,12,9);cx.fillRect(sx+CTS-19,sy+CTS-18,12,9);
+        // building shadow
+        cx.fillStyle='rgba(0,0,0,.3)';cx.fillRect(sx+CTS-4,sy+4,4,CTS-4);cx.fillRect(sx+4,sy+CTS-4,CTS-4,4);
+      } else if(tile===CT.R){
+        cx.fillStyle=(tx+ty)%2?'#282828':'#252525';cx.fillRect(sx,sy,CTS,CTS);
+        // lane markings
+        cx.fillStyle='#484848';
+        if(ty%2===0){cx.fillRect(sx+CTS/2-1,sy,2,CTS*.36);cx.fillRect(sx+CTS/2-1,sy+CTS*.64,2,CTS*.36);}
+        if(tx%2===0){cx.fillRect(sx,sy+CTS/2-1,CTS*.36,2);cx.fillRect(sx+CTS*.64,sy+CTS/2-1,CTS*.36,2);}
+        // yellow center line at main roads
+        cx.fillStyle='rgba(255,194,51,.3)';
+        cx.fillRect(sx+CTS/2-1,sy,2,CTS);
+      } else if(tile===CT.S){
+        cx.fillStyle=(tx+ty)%2?'#363636':'#323232';cx.fillRect(sx,sy,CTS,CTS);
+      } else if(tile===CT.G){
+        cx.fillStyle=(tx+ty)%2?'#2a5a20':'#265018';cx.fillRect(sx,sy,CTS,CTS);
+        // grass texture dots
+        cx.fillStyle='rgba(60,100,40,.4)';if((tx*ty)%3===0)cx.fillRect(sx+10,sy+12,4,4);
+      } else if(tile===CT.P){
+        cx.fillStyle='#202830';cx.fillRect(sx,sy,CTS,CTS);
+        cx.strokeStyle='#3a5870';cx.lineWidth=1;cx.strokeRect(sx+5,sy+5,CTS-10,CTS-10);
+      }
+    }
   }
 
-  ctx.restore();
+  // CITY LABELS
+  for(const lb of CITY_LABELS){
+    const sx=lb.tx*CTS-camX,sy=lb.ty*CTS-camY;
+    if(sx<-100||sx>VW+100||sy<-20||sy>VH+20)continue;
+    cx.fillStyle='rgba(0,0,0,.6)';const tw=lb.name.length*6.5+12;cx.fillRect(sx-tw/2,sy-9,tw,13);
+    cx.fillStyle='rgba(200,220,255,.45)';cx.font='bold 9px monospace';cx.textAlign='center';cx.fillText(lb.name,sx,sy);cx.textAlign='left';
+  }
+
+  // MISSION TARGET
+  const m=G.mission;
+  const tx2=m.tx*CTS-camX,ty2=m.ty*CTS-camY;
+  const pulse=.55+.45*Math.sin(FR*.12);
+  cx.save();cx.globalAlpha=pulse;cx.fillStyle='rgba(255,46,91,.18)';cx.beginPath();cx.arc(tx2,ty2,(20+pulse*10),0,Math.PI*2);cx.fill();cx.globalAlpha=1;cx.fillStyle='rgba(255,46,91,.8)';cx.shadowColor='#ff2e5b';cx.shadowBlur=20;cx.beginPath();cx.arc(tx2,ty2,14,0,Math.PI*2);cx.fill();cx.shadowBlur=0;cx.font='bold 13px monospace';cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(m.emoji,tx2,ty2+5);cx.textAlign='left';cx.restore();
+  // destination name
+  cx.fillStyle='rgba(0,0,0,.65)';cx.fillRect(tx2-40,ty2+18,80,14);cx.fillStyle='#ff8aaa';cx.font='bold 10px monospace';cx.textAlign='center';cx.fillText(m.luogo,tx2,ty2+29);cx.textAlign='left';
+
+  // DIRECTION ARROW
+  const adjX=G.onFoot?G.footC.x:G.car.x,adjY=G.onFoot?G.footC.y:G.car.y;
+  const dx=m.tx*CTS-adjX,dy=m.ty*CTS-adjY,dl=Math.sqrt(dx*dx+dy*dy);
+  if(dl>CTS*4){const na=Math.atan2(dy,dx);const ar=60;const arx=VW/2+Math.cos(na)*ar,ary=VH/2+Math.sin(na)*ar;cx.save();cx.translate(arx,ary);cx.rotate(na+Math.PI/2);cx.fillStyle='rgba(255,46,91,.88)';cx.shadowColor='#ff2e5b';cx.shadowBlur=8;cx.beginPath();cx.moveTo(0,-15);cx.lineTo(10,6);cx.lineTo(-10,6);cx.closePath();cx.fill();cx.restore();cx.fillStyle='rgba(255,46,91,.7)';cx.font='bold 10px monospace';cx.textAlign='center';cx.fillText(Math.round(dl/CTS*.06*10)/10+'km',arx,ary+20);}
+
+  // CITY NPCs
+  for(const n of G.cityNPCs){
+    const sx=n.x-camX,sy2=n.y-camY;
+    if(sx<-30||sx>VW+30||sy2<-30||sy2>VH+30)continue;
+    drawCityNPC(n,sx,sy2);
+  }
+
+  // CREW (on foot)
+  if(G.onFoot){
+    for(const c of G.crew){const sx=c.x-camX,sy2=c.y-camY;drawCityPerson(sx,sy2,c.col,c.name,c.anim,false);}
+  }
+
+  // PLAYER on foot
+  if(G.onFoot){
+    const sx=G.footC.x-camX,sy2=G.footC.y-camY;
+    drawCityPerson(sx,sy2,'#f9a825',G.name,G.footC.anim,true);
+    // fist flash
+    if(G.punchCd>.25){cx.font='22px serif';cx.textAlign='center';cx.fillText('💥',sx+20,sy2-20);}
+  }
+  // AMBULANCE
+  if(!G.onFoot||true){drawCityAmb(G.car.x-camX,G.car.y-camY,G.car.a,G.car.siren);}
+
+  // MINIMAP
+  drawMinimap(camX,camY);
+  // vignette
+  const vg=cx.createRadialGradient(VW/2,VH/2,VH*.3,VW/2,VH/2,VH*.9);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.48)');cx.fillStyle=vg;cx.fillRect(0,0,VW,VH);
 }
 
-function drawLamppost(wx, wy) {
-  const {sx, sy} = w2s(wx, wy);
-  // Luce alone
-  ctx.save();
-  const grad = ctx.createRadialGradient(sx, sy - 40, 2, sx, sy - 40, 50);
-  grad.addColorStop(0, 'rgba(255,244,180,0.25)');
-  grad.addColorStop(1, 'rgba(255,244,180,0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.arc(sx, sy - 40, 50, 0, Math.PI*2); ctx.fill();
-  // Palo
-  ctx.fillStyle = '#546e7a';
-  ctx.fillRect(sx - 2, sy - 50, 4, 50);
-  // Testa
-  ctx.fillStyle = '#ffe57f';
-  ctx.shadowColor = '#ffe57f'; ctx.shadowBlur = 12;
-  ctx.beginPath(); ctx.arc(sx, sy - 52, 5, 0, Math.PI*2); ctx.fill();
-  ctx.restore();
+function drawCityNPC(n,sx,sy){
+  cx.save();cx.translate(sx,sy);
+  if(n.lying){cx.globalAlpha=.65;cx.font=(n.size+4)+'px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('💀',0,0);cx.globalAlpha=1;cx.restore();return;}
+  if(n.stunTm>0){cx.globalAlpha=.7;}
+  // shadow
+  cx.fillStyle='rgba(0,0,0,.25)';cx.beginPath();cx.ellipse(1,3,n.size*.6,n.size*.28,0,0,Math.PI*2);cx.fill();
+  // body circle
+  cx.fillStyle=n.col;cx.beginPath();cx.arc(0,0,n.size*.55,0,Math.PI*2);cx.fill();
+  // crazy emoji
+  cx.font=(n.size*.9+4)+'px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🤪',0,1);
+  // stun stars
+  if(n.stunTm>0)for(let i=0;i<3;i++){const sa=FR*.15+i*Math.PI*2/3;cx.font='9px serif';cx.fillText('⭐',Math.cos(sa)*15,Math.sin(sa)*8-n.size*.9);}
+  cx.globalAlpha=1;cx.restore();
+  // frase bubble occasionally
+  if(n.fraseTimer<.3){const bx=clamp(sx-50,5,VW-160),by=clamp(sy-50,10,VH-50);showBubble('npc_'+Math.round(n.x),bx,by,n.frase,'red-b',2000);}
 }
 
-// ─── DRAW LOOP ───
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  drawScene();
-
-  // Vignette notturna
-  const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.9);
-  vig.addColorStop(0, 'rgba(0,0,0,0)');
-  vig.addColorStop(1, 'rgba(0,0,0,0.55)');
-  ctx.fillStyle = vig;
-  ctx.fillRect(0, 0, W, H);
+function drawCityPerson(sx,sy,col,name,anim,isPlayer){
+  cx.save();cx.translate(sx,sy);
+  const walk=Math.sin(anim*2)*1;const bob=Math.abs(Math.sin(anim*2))*1.5;const h=30;
+  cx.fillStyle='rgba(0,0,0,.22)';cx.beginPath();cx.ellipse(0,4,9,4,0,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#1a243a';cx.save();cx.translate(-3.5,-h+13);cx.rotate(walk*.06);cx.fillRect(-3,0,5,12);cx.fillStyle='#111';cx.fillRect(-3,10,6,4);cx.restore();
+  cx.fillStyle='#1a243a';cx.save();cx.translate(3.5,-h+13);cx.rotate(-walk*.06);cx.fillRect(-2,0,5,12);cx.fillStyle='#111';cx.fillRect(-2,10,6,4);cx.restore();
+  cx.fillStyle=col;cx.shadowColor='rgba(0,0,0,.35)';cx.shadowBlur=4;cx.shadowOffsetY=2;cx.beginPath();cx.roundRect(-6.5,-h,13,13,3);cx.fill();cx.shadowBlur=0;cx.shadowOffsetY=0;
+  cx.fillStyle='rgba(255,255,255,.45)';cx.fillRect(-6.5,-h+5,13,1.5);
+  cx.fillStyle='#e0b088';cx.fillRect(-2,-h-2,4,4);
+  cx.save();cx.translate(0,-h-bob);
+  cx.fillStyle='#f2c48a';cx.beginPath();cx.ellipse(0,-4,6,7,0,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#1a1a1a';cx.beginPath();cx.ellipse(0,-9,6,4.5,0,Math.PI,Math.PI*2);cx.fill();
+  cx.fillStyle='#fff';cx.beginPath();cx.arc(-2.5,-4.5,1.4,0,Math.PI*2);cx.fill();cx.arc(2.5,-4.5,1.4,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#1a1a2e';cx.beginPath();cx.arc(-2.5,-4.5,.8,0,Math.PI*2);cx.fill();cx.arc(2.5,-4.5,.8,0,Math.PI*2);cx.fill();
+  if(isPlayer){cx.fillStyle='#1565c0';cx.beginPath();cx.ellipse(0,-9,7,4.5,0,Math.PI,Math.PI*2);cx.fill();cx.fillRect(-7,-9.5,14,2);cx.fillStyle='#ef5350';cx.fillRect(-1.5,-11,3,5);cx.fillRect(-3.5,-9.5,7,2);}
+  cx.restore();
+  if(name){cx.font='bold 9px monospace';const tw=cx.measureText(name).width;cx.fillStyle='rgba(0,0,0,.7)';cx.fillRect(-tw/2-4,-h-25,tw+8,12);cx.fillStyle=isPlayer?'#ffd740':'#a5d6a7';cx.textAlign='center';cx.fillText(name,0,-h-16);}
+  cx.restore();
 }
 
-function loop() {
-  update();
-  draw();
+function drawCityAmb(sx,sy,angle,siren){
+  cx.save();cx.translate(sx,sy);cx.rotate(angle);
+  const W=24,H=46;
+  cx.fillStyle='rgba(0,0,0,.32)';cx.beginPath();cx.ellipse(3,5,W*.5,H*.38,0,0,Math.PI*2);cx.fill();
+  cx.fillStyle='#f0f4f8';cx.shadowColor='rgba(0,0,0,.5)';cx.shadowBlur=8;cx.shadowOffsetY=4;cx.beginPath();cx.roundRect(-W/2,-H/2,W,H,5);cx.fill();cx.shadowBlur=0;cx.shadowOffsetY=0;
+  cx.fillStyle='#cc2222';cx.fillRect(-W/2,-H/2+4,W,6);cx.fillRect(-W/2,H/2-10,W,6);
+  cx.fillStyle='rgba(80,160,220,.82)';cx.fillRect(-W/2+3,-H/2+1,W-6,11);
+  cx.fillStyle='rgba(100,180,255,.2)';cx.fillRect(-W/2+4,-H/2+2,9,8);
+  cx.fillStyle='#cc2222';cx.fillRect(-3,-5,6,15);cx.fillRect(-8,-.5,16,5);
+  cx.fillStyle='#111';cx.fillRect(-W/2-4,-H/4,6,9);cx.fillRect(W/2-2,-H/4,6,9);cx.fillRect(-W/2-4,H/4-5,6,9);cx.fillRect(W/2-2,H/4-5,6,9);
+  cx.fillStyle='#4a5a6a';cx.fillRect(-W/2+2,-H/2-6,W-4,5);
+  if(siren){const bl=FR%8<4?'#2196f3':'#f44336';const rd=FR%8<4?'#f44336':'#2196f3';cx.shadowColor=bl;cx.shadowBlur=18;cx.fillStyle=bl;cx.fillRect(-W/2+2,-H/2-6,W/2-2,5);cx.shadowColor=rd;cx.fillStyle=rd;cx.fillRect(2,-H/2-6,W/2-2,5);cx.shadowBlur=0;}
+  cx.restore();
+}
+
+function drawMinimap(camX,camY){
+  const mw=120,mh=96;
+  const sx_r=mw/CMW,sy_r=mh/CMH;
+  mcx.fillStyle='#0a141e';mcx.fillRect(0,0,mw,mh);
+  for(let ty=0;ty<CMH;ty++)for(let tx=0;tx<CMW;tx++){
+    const t=CMAP[ty][tx];
+    mcx.fillStyle=t===CT.R?'#3a3a3a':t===CT.G?'#2a4a20':t===CT.P?'#1a2a34':'#1e1610';
+    mcx.fillRect(tx*sx_r,ty*sy_r,sx_r,sy_r);
+  }
+  // target
+  const m=G.mission;const pulse=.5+.5*Math.sin(FR*.2);
+  mcx.globalAlpha=pulse;mcx.fillStyle='#ff2e5b';mcx.beginPath();mcx.arc(m.tx*sx_r,m.ty*sy_r,4,0,Math.PI*2);mcx.fill();mcx.globalAlpha=1;
+  // npcs
+  mcx.fillStyle='#ff6600';
+  for(const n of G.cityNPCs){if(!n.lying)mcx.fillRect(n.x/CTS*sx_r-1,n.y/CTS*sy_r-1,2,2);}
+  // player
+  const px=G.onFoot?G.footC.x:G.car.x,py=G.onFoot?G.footC.y:G.car.y;
+  mcx.fillStyle=G.car.siren?(FR%8<4?'#ff2020':'#2020ff'):'#ffc233';
+  mcx.beginPath();mcx.arc(px/CTS*sx_r,py/CTS*sy_r,3,0,Math.PI*2);mcx.fill();
+}
+
+// ── FLASH ─────────────────────────────────────────────────────────
+function flashSiren(col,_unused){const sf=document.getElementById('sflash');sf.style.background=col;sf.style.opacity=1;setTimeout(()=>sf.style.opacity=0,280);}
+
+// ── INPUT ─────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  KEYS[e.code]=true;
+  if(e.code==='KeyF'&&G.car){G.car.siren=!G.car.siren;aInit();if(G.car.siren)beep(880,.1,'square',.4);}
+  if(e.code==='KeyH'){aInit();sHonk();}
+  if(e.code==='Space'){e.preventDefault();aInit();}
+});
+document.addEventListener('keyup',e=>{KEYS[e.code]=false;});
+
+// ── TOUCH ─────────────────────────────────────────────────────────
+function setupTouch(){
+  const jz=document.getElementById('joy-zone'),jt=document.getElementById('joy-thumb');const JR=46;
+  function gp(t){const r=jz.getBoundingClientRect();return{x:t.clientX-r.left-JR,y:t.clientY-r.top-JR};}
+  jz.addEventListener('touchstart',e=>{e.preventDefault();aInit();const t=e.changedTouches[0];G.jId=t.identifier;G.jActive=true;const p=gp(t);G.jx=clamp(p.x/JR,-1,1);G.jy=clamp(p.y/JR,-1,1);},{passive:false});
+  jz.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===G.jId){const p=gp(t);G.jx=clamp(p.x/JR,-1,1);G.jy=clamp(p.y/JR,-1,1);const px=clamp(p.x,-JR,JR)+JR,py=clamp(p.y,-JR,JR)+JR;jt.style.left=px-22+'px';jt.style.top=py-22+'px';}},{passive:false});
+  jz.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===G.jId){G.jActive=false;G.jx=0;G.jy=0;G.jId=null;jt.style.left='';jt.style.top='';}});
+  document.getElementById('tb-e').addEventListener('touchstart',e=>{e.preventDefault();aInit();KEYS['KeyE']=true;setTimeout(()=>KEYS['KeyE']=false,120);});
+  document.getElementById('tb-siren').addEventListener('touchstart',e=>{e.preventDefault();aInit();G.car.siren=!G.car.siren;if(G.car.siren)beep(880,.1,'square',.4);});
+  document.getElementById('tb-punch').addEventListener('touchstart',e=>{e.preventDefault();aInit();KEYS['KeyJ']=true;setTimeout(()=>KEYS['KeyJ']=false,120);});
+}
+
+// ── FIREBASE ──────────────────────────────────────────────────────
+let fbDb=null,fbM=null;
+(async()=>{try{const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');fbM=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');fbDb=fbM.getFirestore(initializeApp(FB_CFG));}catch(e){console.warn('Firebase offline');}})();
+async function fbSave(name,score,timeS,level){if(!fbDb)return lsave(name,score,timeS,level);try{const now=new Date();await fbM.addDoc(fbM.collection(fbDb,'118_v5'),{name,score:Math.floor(score),timeS:parseFloat(timeS.toFixed(2)),level,giorno:now.toISOString().split('T')[0],settimana:wkKey(now),ts:fbM.serverTimestamp()});}catch(e){lsave(name,score,timeS,level);}}
+async function fbLoad(tipo='oggi',n=10){if(!fbDb)return lload();try{const{collection,getDocs,query,orderBy,limit,where}=fbM;const now=new Date();let q;if(tipo==='settimana')q=query(collection(fbDb,'118_v5'),where('settimana','==',wkKey(now)),orderBy('timeS','asc'),limit(n));else if(tipo==='alltime')q=query(collection(fbDb,'118_v5'),orderBy('timeS','asc'),limit(n));else q=query(collection(fbDb,'118_v5'),where('giorno','==',now.toISOString().split('T')[0]),orderBy('timeS','asc'),limit(n));const s=await getDocs(q);return s.docs.map(d=>d.data());}catch(e){return lload();}}
+function wkKey(d){const dt=new Date(d);dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);const w=new Date(dt.getFullYear(),0,4);return dt.getFullYear()+'-W'+String(1+Math.round(((dt-w)/86400000-3+(w.getDay()+6)%7)/7)).padStart(2,'0');}
+function lsave(n,s,t,l){try{const a=lload();a.push({name:n,score:Math.floor(s),timeS:parseFloat(t.toFixed(2)),level:l,giorno:new Date().toISOString().split('T')[0],settimana:wkKey(new Date())});a.sort((a,b)=>a.timeS-b.timeS);localStorage.setItem('118v5',JSON.stringify(a.slice(0,30)));}catch(e){}}
+function lload(){try{return JSON.parse(localStorage.getItem('118v5')||'[]');}catch(e){return[];}}
+async function loadLb(tbodyId,tipo='oggi'){const data=await fbLoad(tipo);const med=['🥇','🥈','🥉'];const tb=document.getElementById(tbodyId);if(!tb)return;tb.innerHTML='';data.forEach((d,i)=>{const tr=document.createElement('tr');tr.className='lb-'+(i+1)+(d.name===G?.name?' lb-me':'');tr.innerHTML=`<td>${med[i]||'#'+(i+1)}</td><td>${d.name||'?'}</td><td style="color:var(--amber)">${d.timeS?.toFixed(2)||'?'}s</td><td>${(d.score||0).toLocaleString()}</td><td>${d.level||1}</td>`;tb.appendChild(tr);});}
+async function switchLbTab(btn,tipo){document.querySelectorAll('.lb-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');await loadLb('lb-intro',tipo);}
+window.switchLbTab=switchLbTab;
+
+// ── MAIN LOOP ─────────────────────────────────────────────────────
+function loop(ts){
+  const dt=Math.min((ts-G.last)/1000,.05);G.last=ts;FR++;
+  if(G.scene==='hospital'||G.scene==='phone'){
+    if(G.scene==='hospital'){hospMove(dt);hospUpdate();}
+    drawHospital();
+  } else if(G.scene==='city'){
+    cityUpdate(dt);drawCity();
+  }
   requestAnimationFrame(loop);
 }
 
-// ─── EVENTI UI ───
-document.getElementById('start-btn').addEventListener('click', () => {
-  const inp = document.getElementById('player-name-input').value.trim();
-  playerName = inp.length > 0 ? inp.toUpperCase() : 'AAA';
-  overlayTitle.style.display = 'none';
-  initGame();
-  msg(MISSION_STEPS[0].text.replace('MISSIONE 1/4 — ',''));
+// ── UI EVENTS ─────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click',()=>{
+  aInit();const n=document.getElementById('name-inp').value.trim()||'ANONIMO';newGame(n);
 });
-
-document.getElementById('player-name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('start-btn').click();
+document.getElementById('name-inp').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-start').click();});
+document.getElementById('btn-save').addEventListener('click',async()=>{
+  const n=document.getElementById('go-name').value.trim()||G.name;
+  await fbSave(n,G.score,0,G.level);
+  document.getElementById('btn-again').click();
 });
-
-document.getElementById('play-again-btn').addEventListener('click', () => {
-  overlayVictory.style.display = 'none';
-  overlayTitle.style.display = 'flex';
-  document.getElementById('player-name-input').value = playerName;
-  document.getElementById('player-name-input').focus();
+document.getElementById('btn-again').addEventListener('click',()=>{
+  aInit();const n=document.getElementById('go-name').value.trim()||G.name;newGame(n);
 });
+document.getElementById('btn-menu').addEventListener('click',()=>{showOv('ov-intro');loadLb('lb-intro');});
 
-document.getElementById('retry-btn').addEventListener('click', () => {
-  overlayGameover.style.display = 'none';
-  overlayTitle.style.display = 'flex';
-  document.getElementById('player-name-input').value = playerName;
-  document.getElementById('player-name-input').focus();
-});
-
-loop();
-</script>
-</body>
-</html>
+// ── BOOT ──────────────────────────────────────────────────────────
+setupTouch();
+G={scene:'loading',last:performance.now(),car:{siren:false},onFoot:false,name:'',level:1,mDone:0,score:0,combo:0};
+showOv('ov-intro');
+loadLb('lb-intro');
+// idle render loop before game starts
+(function idleLoop(ts){if(G.scene!=='hospital'&&G.scene!=='phone'&&G.scene!=='city'){FR++;requestAnimationFrame(idleLoop);}else{G.last=performance.now();requestAnimationFrame(loop);}})();
+</script></body></html>
